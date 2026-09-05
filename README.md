@@ -64,7 +64,7 @@ Storage keys: `@uas7_entries_v1`, `@uas7_settings_v1`.
 
 ## Getting started
 
-Prerequisites: Node LTS, npm, Expo CLI / EAS CLI for device builds.
+Prerequisites: Node LTS + npm. `npm start` and the other Expo scripts work out of the box (Expo CLI ships with the project). Device builds need EAS CLI — see below.
 
 ```bash
 npm install
@@ -88,9 +88,19 @@ npm run test:logic
 
 `eas.json` defines `development`, `preview`, and `production` profiles. `app.json` is already wired with `ios.bundleIdentifier`, `android.package`, icons, splash, and the `expo-localization` plugin.
 
+The `eas` command comes from the `eas-cli` package, which `npm install` does not install — that's why bare `eas` says "command not found". Either install it once globally, or run it via `npx` (no install needed):
+
 ```bash
+# Option A: one-time global install, then use `eas` directly
+npm install -g eas-cli
 eas build -p android --profile preview
 eas build -p ios --profile preview
+```
+
+```bash
+# Option B: no install — prefix with npx
+npx eas-cli build -p android --profile preview
+npx eas-cli build -p ios --profile preview
 ```
 
 ## Disclaimer

@@ -64,7 +64,7 @@ assets/               # 圖示、啟動畫面、favicon
 
 ## 開始使用
 
-需求：Node LTS、npm；裝置建置需 Expo CLI / EAS CLI。
+需求：Node LTS＋npm。`npm start` 與其他 Expo 指令開箱即用（Expo CLI 已隨專案安裝）；裝置建置需 EAS CLI，見下方。
 
 ```bash
 npm install
@@ -88,9 +88,19 @@ npm run test:logic
 
 `eas.json` 已定義 `development`、`preview`、`production`。`app.json` 已設定 `ios.bundleIdentifier`、`android.package`、圖示、啟動畫面與 `expo-localization` 外掛。
 
+`eas` 指令來自 `eas-cli` 套件，`npm install` 不會安裝它——這就是直接打 `eas` 會出現 "command not found" 的原因。可二選一：全域安裝一次，或用 `npx` 免安裝執行：
+
 ```bash
+# 選項 A：全域安裝一次，之後直接用 `eas`
+npm install -g eas-cli
 eas build -p android --profile preview
 eas build -p ios --profile preview
+```
+
+```bash
+# 選項 B：免安裝——用 npx 執行
+npx eas-cli build -p android --profile preview
+npx eas-cli build -p ios --profile preview
 ```
 
 ## 免責聲明
