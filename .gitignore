@@ -40,3 +40,7 @@ dist-test/
 # generated native folders
 /ios
 /android
+
+# agent skills (local-only, not tracked)
+.agents/
+skills-lock.json
