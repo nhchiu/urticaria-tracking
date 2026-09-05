@@ -1,5 +1,7 @@
 # Urticaria UAS7 Tracker
 
+[English](./README.md) | [繁體中文](./README.zh-Hant.md)
+
 UAS7 urticaria diary for Android and iOS, built with Expo React Native. Record daily wheals + itch scores, compute the weekly UAS7, and visualize the 7-day trend.
 
 ## Features
