@@ -77,7 +77,7 @@ export interface Strings {
 }
 
 const en: Strings = {
-  appName: 'UAS7 Tracker',
+  appName: 'UAS7 Diary',
   subtitle: 'Record wheals + itch (0–3 each) every day. Daily UAS 0–6, weekly UAS7 0–42.',
   sectionEntry: '1 · Daily entry',
   whichDay: 'Which day?',
@@ -137,7 +137,7 @@ const en: Strings = {
 };
 
 const zhHant: Strings = {
-  appName: 'UAS7 蕁麻疹追蹤',
+  appName: '蕁麻疹日記',
   subtitle: '每天記錄風疹塊＋搔癢（各 0–3 分）。每日 UAS 0–6，每週 UAS7 0–42。',
   sectionEntry: '1 · 每日紀錄',
   whichDay: '選擇日期',

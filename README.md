@@ -1,4 +1,4 @@
-# Urticaria UAS7 Tracker
+# UAS7 Diary
 
 [English](./README.md) | [繁體中文](./README.zh-Hant.md)
 
@@ -83,6 +83,27 @@ Type-check and logic tests:
 npm run tsc
 npm run test:logic
 ```
+
+## Web (PWA)
+
+The web build is an installable PWA (manifest + offline service worker + icons
+in `public/`; web meta in `app.json` → `expo.web`).
+
+```bash
+npm run build:web   # exports to dist/
+```
+
+Deploy the `dist/` folder to any static HTTPS host (EAS hosting, Vercel,
+Netlify, Cloudflare Pages, GitHub Pages…). Visiting the HTTPS URL then offers
+“Install” / “Add to Home Screen”, and the app keeps working offline after the
+first visit. (`expo start --web` skips service-worker registration so local
+development never serves stale cached bundles.)
+
+Live on GitHub Pages at <https://nhchiu.github.io/urticaria-tracking/> —
+every push to `main` rebuilds and redeploys via `.github/workflows/deploy-web.yml`.
+(`app.json` sets `experiments.baseUrl` so bundles resolve under the
+`/urticaria-tracking` subpath; `public/.nojekyll` keeps Pages from hiding the
+`_expo` folder.)
 
 ## EAS builds
 

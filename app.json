@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Urticaria UAS7 Tracker",
+      "name": "UAS7 Diary",
     "slug": "urticaria-tracking",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -26,11 +26,26 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "output": "single",
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png",
+    "name": "UAS7 Diary",
+      "shortName": "UAS7",
+      "lang": "en",
+      "description": "UAS7 urticaria diary: record daily wheals + itch scores, compute the weekly UAS7, and visualize the 7-day trend. Works offline.",
+      "themeColor": "#1d4ed8",
+      "backgroundColor": "#E6F4FE",
+      "display": "standalone",
+      "orientation": "portrait",
+      "startUrl": ".",
+      "scope": "."
     },
     "plugins": [
       "expo-localization"
     ],
+    "experiments": {
+      "baseUrl": "/urticaria-tracking"
+    },
     "extra": {
       "eas": {
         "projectId": "1a5567ac-c126-4aa5-9131-c4219c007efa"

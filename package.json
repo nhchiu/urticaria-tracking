@@ -27,6 +27,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
+    "build:web": "expo export --platform web",
     "tsc": "tsc --noEmit",
     "test:logic": "tsc --ignoreConfig --module commonjs --target es2019 --outDir ./dist-test --rootDir ./src src/uas.ts src/uas.run-tests.ts && node ./dist-test/uas.run-tests.js"
   }

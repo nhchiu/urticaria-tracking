@@ -1,4 +1,4 @@
-# UAS7 蕁麻疹追蹤
+# 蕁麻疹日記
 
 以 Expo React Native 打造的 UAS7 蕁麻疹日記，支援 Android 與 iOS。每天記錄風疹塊＋搔癢分數，自動計算每週 UAS7，並以圖表呈現 7 天趨勢。
 
@@ -83,6 +83,25 @@ npm start
 npm run tsc
 npm run test:logic
 ```
+
+## 網頁版（PWA）
+
+網頁建置為可安裝的 PWA（`public/` 內含 manifest、離線 service worker 與圖示；
+網頁 meta 由 `app.json` → `expo.web` 設定）。
+
+```bash
+npm run build:web   # 輸出至 dist/
+```
+
+將 `dist/` 資料夾部署到任何支援 HTTPS 的靜態主機（EAS hosting、Vercel、
+Netlify、Cloudflare Pages、GitHub Pages……）。以 HTTPS 網址開啟後即可「安裝」／
+「加入主畫面」，首次載入後離線也能繼續使用。（`expo start --web` 會略過
+service worker 註冊，本地開發不會吃到過期快取。）
+
+GitHub Pages 線上版本：<https://nhchiu.github.io/urticaria-tracking/> ——
+每次推送到 `main` 都會經由 `.github/workflows/deploy-web.yml` 重新建置部署。
+（`app.json` 以 `experiments.baseUrl` 讓 bundle 在 `/urticaria-tracking`
+子路徑下正確載入；`public/.nojekyll` 避免 Pages 隱藏 `_expo` 資料夾。）
 
 ## EAS 建置
 
