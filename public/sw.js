@@ -1,4 +1,4 @@
-/* UAS7 Diary — offline service worker.
+/* UAS7 Diary 蕁麻疹日記 — offline service worker.
  *
  * App-shell + runtime caching for the `expo export --platform web` output:
  * - On install, precache the app shell (page, manifest, icons).

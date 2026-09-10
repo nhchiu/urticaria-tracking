@@ -1,6 +1,6 @@
 {
   "expo": {
-      "name": "UAS7 Diary",
+      "name": "UAS7 Diary 蕁麻疹日記",
     "slug": "urticaria-tracking",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -29,7 +29,7 @@
       "output": "single",
       "bundler": "metro",
       "favicon": "./assets/favicon.png",
-    "name": "UAS7 Diary",
+    "name": "UAS7 Diary 蕁麻疹日記",
       "shortName": "UAS7",
       "lang": "en",
       "description": "UAS7 urticaria diary: record daily wheals + itch scores, compute the weekly UAS7, and visualize the 7-day trend. Works offline.",
