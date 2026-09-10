@@ -1,0 +1,9 @@
+{
+  "ios": {
+    "CFBundleDisplayName": "UAS7 Diary",
+    "CFBundleName": "UAS7 Diary"
+  },
+  "android": {
+    "app_name": "UAS7 Diary"
+  }
+}

@@ -5,6 +5,21 @@
     <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>%WEB_TITLE%</title>
+    <script>
+      // Localized tab title: follows the system language (UAS7 Diary / 蕁麻疹日記).
+      (function () {
+        function applyTitle() {
+          try {
+            var lang = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
+            document.title = lang === 'zh' || lang.indexOf('zh-') === 0 ? '蕁麻疹日記' : 'UAS7 Diary';
+          } catch (e) {}
+        }
+        applyTitle();
+        try {
+          window.addEventListener('languagechange', applyTitle);
+        } catch (e) {}
+      })();
+    </script>
     <!-- PWA: installable web app -->
     <link rel="manifest" href="./manifest.json" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />

@@ -1,0 +1,9 @@
+{
+  "ios": {
+    "CFBundleDisplayName": "蕁麻疹日記",
+    "CFBundleName": "蕁麻疹日記"
+  },
+  "android": {
+    "app_name": "蕁麻疹日記"
+  }
+}

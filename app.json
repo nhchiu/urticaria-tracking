@@ -1,6 +1,6 @@
 {
   "expo": {
-      "name": "UAS7 Diary 蕁麻疹日記",
+    "name": "UAS7 Diary",
     "slug": "urticaria-tracking",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -43,6 +43,10 @@
     "plugins": [
       "expo-localization"
     ],
+    "locales": {
+      "en": "./locales/en.json",
+      "zh-Hant": "./locales/zh-Hant.json"
+    },
     "experiments": {
       "baseUrl": "/urticaria-tracking"
     },
