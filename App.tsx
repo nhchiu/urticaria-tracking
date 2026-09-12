@@ -573,6 +573,9 @@ export default function App() {
                     title={t.optDark}
                   />
                 </Menu>
+                <Text variant="bodySmall" style={styles.copyright}>
+                  © 2026 nhchiu
+                </Text>
               </Dialog.Content>
               <Dialog.Actions>
                 <Button onPress={() => setSettingsVisible(false)}>{t.done}</Button>
@@ -638,5 +641,6 @@ const styles = StyleSheet.create({
   weekLabel: { flex: 1 },
   weekSum: { alignItems: 'flex-end', marginLeft: 12 },
   dialogGap: { marginTop: 16 },
+  copyright: { marginTop: 16, opacity: 0.6, textAlign: 'center' },
   footer: { marginTop: 16, opacity: 0.6, lineHeight: 18 },
 });
