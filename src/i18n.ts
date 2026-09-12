@@ -58,7 +58,6 @@ export interface Strings {
   cancel: string;
   sectionSummary: string;
   recordedDays: (n: number) => string;
-  provisional: string;
   sectionTrend: string;
   sectionWeeks: string;
   thisWeek: string;
@@ -82,7 +81,7 @@ export interface Strings {
 const en: Strings = {
   appName: 'UAS7 Diary',
   subtitle: 'Record wheals + itch (0–3 each) every day. Daily UAS 0–6, weekly UAS7 0–42.',
-  sectionEntry: '1 · Daily entry',
+  sectionEntry: 'Daily entry',
   whichDay: 'Which day?',
   today: 'Today',
   recordingFor: 'Recording for:',
@@ -112,11 +111,10 @@ const en: Strings = {
   deleteTitle: 'Delete entry?',
   deleteMessage: (date) => `Remove the entry for ${date}?`,
   cancel: 'Cancel',
-  sectionSummary: '2 · UAS7 summary (last 7 days)',
+  sectionSummary: 'UAS7 summary (last 7 days)',
   recordedDays: (n) => `${n} of 7 days recorded`,
-  provisional: ' — sum is provisional until all 7 days are entered.',
-  sectionTrend: '3 · 7-day trend',
-  sectionWeeks: '4 · Past 4 weeks',
+  sectionTrend: '7-day trend',
+  sectionWeeks: 'Past 4 weeks',
   thisWeek: 'This week',
   chartHint: 'Line = daily UAS (0–6). Hollow markers = missing days.',
   chartNoteHint: '★ = day has a note.',
@@ -145,7 +143,7 @@ const en: Strings = {
 const zhHant: Strings = {
   appName: '蕁麻疹日記',
   subtitle: '每天記錄風疹塊＋搔癢（各 0–3 分）。每日 UAS 0–6，每週 UAS7 0–42。',
-  sectionEntry: '1 · 每日紀錄',
+  sectionEntry: '每日紀錄',
   whichDay: '選擇日期',
   today: '今天',
   recordingFor: '紀錄日期：',
@@ -175,11 +173,10 @@ const zhHant: Strings = {
   deleteTitle: '刪除紀錄？',
   deleteMessage: (date) => `要刪除 ${date} 的紀錄嗎？`,
   cancel: '取消',
-  sectionSummary: '2 · UAS7 總結（過去 7 天）',
+  sectionSummary: 'UAS7 總結（過去 7 天）',
   recordedDays: (n) => `已紀錄 ${n}／7 天`,
-  provisional: ' — 集滿 7 天前總分僅供參考。',
-  sectionTrend: '3 · 7 天趨勢',
-  sectionWeeks: '4 · 過去四週每週累積',
+  sectionTrend: '7 天趨勢',
+  sectionWeeks: '過去四週每週累積',
   thisWeek: '本週',
   chartHint: '折線＝每日 UAS（0–6）。空心點＝缺漏日期。',
   chartNoteHint: '★＝該日有備註。',

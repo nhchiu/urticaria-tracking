@@ -56,7 +56,7 @@ export function TrendChart({
               strokeWidth={v === 0 ? 1.5 : 0.75}
               opacity={v === 0 ? 0.9 : 0.55}
             />
-            <SvgText x={4} y={sy(v) + 3.5} fontSize={10} fill={palette.faint}>
+            <SvgText x={4} y={sy(v) + 3.5} fontSize={11} fill={palette.faint}>
               {v}
             </SvgText>
           </G>
@@ -112,7 +112,7 @@ export function TrendChart({
                   <SvgText
                     x={sx(i)}
                     y={sy(d.total) - 10}
-                    fontSize={11}
+                    fontSize={12}
                     fontWeight="700"
                     textAnchor="middle"
                     fill={palette.text}
@@ -122,8 +122,8 @@ export function TrendChart({
                   {hasNote(d.entry) && (
                     <SvgText
                       x={sx(i)}
-                      y={sy(d.total) - 24}
-                      fontSize={12}
+                      y={sy(d.total) - 25}
+                      fontSize={13}
                       textAnchor="middle"
                       fill="#eab308"
                     >
@@ -156,7 +156,7 @@ export function TrendChart({
               key={`x-${d.date}`}
               x={sx(i)}
               y={h - 20}
-              fontSize={10}
+              fontSize={11}
               textAnchor="middle"
               fill={d.date === selectedDate ? palette.text : palette.faint}
               fontWeight={d.date === selectedDate ? '700' : '400'}
@@ -165,7 +165,7 @@ export function TrendChart({
               <TSpan x={sx(i)} dy="0">
                 {datePart}
               </TSpan>
-              <TSpan x={sx(i)} dy="11">
+              <TSpan x={sx(i)} dy="12">
                 {wdPart}
               </TSpan>
             </SvgText>

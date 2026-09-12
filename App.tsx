@@ -360,11 +360,10 @@ export default function App() {
           <Text variant="bodySmall" style={styles.hint}>
             {band.range} · {bandText.description}
           </Text>
-          <ProgressBar progress={progress} color={band.color} style={styles.progress} />
           <Text variant="bodySmall" style={styles.hint}>
             {t.recordedDays(uas7.recordedDays)}
-            {!uas7.complete && t.provisional}
           </Text>
+          <ProgressBar progress={progress} color={band.color} style={styles.progress} />
         </Card.Content>
       </Card>
     </>
@@ -416,7 +415,6 @@ export default function App() {
                     </Text>
                     <Text variant="bodySmall" style={styles.hint}>
                       {t.recordedDays(w.recordedDays)}
-                      {!w.complete && t.provisional}
                     </Text>
                   </View>
                   <View style={styles.weekSum}>
@@ -648,35 +646,35 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   content: { padding: 16, paddingBottom: 48, alignItems: 'center' },
   inner: { width: '100%', maxWidth: 720 },
-  subtitleBar: { paddingHorizontal: 16, paddingTop: 8 },
+  subtitleBar: { paddingHorizontal: 16, paddingTop: 8, fontSize: 15, lineHeight: 22 },
   tabWrap: { flex: 1 },
   subtitle: { marginBottom: 8 },
-  sectionTitle: { marginTop: 20, marginBottom: 8 },
+  sectionTitle: { marginTop: 20, marginBottom: 8, fontSize: 19 },
   card: { marginBottom: 12 },
-  hint: { marginTop: 4, opacity: 0.7 },
+  hint: { marginTop: 4, opacity: 0.7, fontSize: 14, lineHeight: 20 },
   dropdown: { marginTop: 8, alignSelf: 'stretch' },
   dropdownContent: { justifyContent: 'space-between' },
   scoreRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
   scoreBtn: { flex: 1, minWidth: 0, borderRadius: 12 },
   scoreContent: { height: 52, paddingHorizontal: 4 },
-  scoreLabel: { fontSize: 20, fontWeight: '800', marginHorizontal: 0 },
+  scoreLabel: { fontSize: 22, fontWeight: '800', marginHorizontal: 0 },
   legend: { marginTop: 12 },
   legendRow: { marginTop: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 },
-  legendTitle: { fontWeight: '600', flexShrink: 0 },
-  legendDetail: { fontSize: 13, flex: 1, textAlign: 'right', opacity: 0.7 },
+  legendTitle: { fontWeight: '600', flexShrink: 0, fontSize: 15 },
+  legendDetail: { fontSize: 15, flex: 1, textAlign: 'right', opacity: 0.7 },
   dateStrip: { marginTop: 10 },
   dateChip: { marginRight: 8 },
   noteInput: { marginTop: 8 },
   btnRow: { flexDirection: 'row', gap: 10, marginTop: 12 },
   btn: { flex: 1 },
-  bandChip: { alignSelf: 'flex-start', marginTop: 8 },
-  bandChipText: { color: '#fff', fontWeight: '700' },
-  progress: { marginTop: 12, height: 8, borderRadius: 4 },
+  bandChip: { alignSelf: 'flex-start', marginTop: 4 },
+  bandChipText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  progress: { marginTop: 8, height: 8, borderRadius: 4 },
   weekBlockGap: { marginTop: 20 },
   weekRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   weekLabel: { flex: 1 },
   weekSum: { alignItems: 'flex-end', marginLeft: 12 },
   dialogGap: { marginTop: 16 },
-  copyright: { marginTop: 16, opacity: 0.6, textAlign: 'center' },
-  footer: { marginTop: 16, opacity: 0.6, lineHeight: 18 },
+  copyright: { marginTop: 16, opacity: 0.6, textAlign: 'center', fontSize: 13 },
+  footer: { marginTop: 16, opacity: 0.6, lineHeight: 20, fontSize: 13 },
 });
