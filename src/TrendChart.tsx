@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View } from 'react-native';
-import Svg, { Circle, G, Line, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, G, Line, Text as SvgText, TSpan } from 'react-native-svg';
 import type { Palette } from './theme';
 import type { DayScore } from './uas';
 
@@ -10,7 +10,7 @@ const VB_H = 190;
 const PAD_L = 26;
 const PAD_R = 14;
 const PAD_T = 16;
-const PAD_B = 26;
+const PAD_B = 38;
 
 function x(i: number, w: number): number {
   return PAD_L + (i * (w - PAD_L - PAD_R)) / 6;
@@ -128,20 +128,30 @@ export function TrendChart({
             </G>
           );
         })}
-        {/* x labels */}
-        {days.map((d, i) => (
-          <SvgText
-            key={`x-${d.date}`}
-            x={sx(i)}
-            y={h - 8}
-            fontSize={10}
-            textAnchor="middle"
-            fill={d.date === selectedDate ? palette.text : palette.faint}
-            fontWeight={d.date === selectedDate ? '700' : '400'}
-          >
-            {d.label}
-          </SvgText>
-        ))}
+        {/* x labels: two lines (date / weekday) so they fit narrow screens */}
+        {days.map((d, i) => {
+          const sp = d.label.lastIndexOf(' ');
+          const datePart = sp >= 0 ? d.label.slice(0, sp) : d.label;
+          const wdPart = sp >= 0 ? d.label.slice(sp + 1) : '';
+          return (
+            <SvgText
+              key={`x-${d.date}`}
+              x={sx(i)}
+              y={h - 20}
+              fontSize={10}
+              textAnchor="middle"
+              fill={d.date === selectedDate ? palette.text : palette.faint}
+              fontWeight={d.date === selectedDate ? '700' : '400'}
+            >
+              <TSpan x={sx(i)} dy="0">
+                {datePart}
+              </TSpan>
+              <TSpan x={sx(i)} dy="11">
+                {wdPart}
+              </TSpan>
+            </SvgText>
+          );
+        })}
       </Svg>
     </View>
   );
