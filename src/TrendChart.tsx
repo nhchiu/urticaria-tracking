@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import Svg, { Circle, G, Line, Text as SvgText, TSpan } from 'react-native-svg';
 import type { Palette } from './theme';
-import type { DayScore } from './uas';
+import { hasNote, type DayScore } from './uas';
 
 const MAX = 6;
 const VB_W = 360;
@@ -28,10 +28,12 @@ export function TrendChart({
   days,
   palette,
   selectedDate,
+  onSelectDate,
 }: {
   days: DayScore[];
   palette: Palette;
   selectedDate: string;
+  onSelectDate?: (date: string) => void;
 }) {
   const [width, setWidth] = useState(VB_W);
   const w = Math.max(280, width);
@@ -80,8 +82,12 @@ export function TrendChart({
         {/* markers + value labels */}
         {days.map((d, i) => {
           const selected = d.date === selectedDate;
+          const cy = d.total !== null ? sy(d.total) : sy(0);
+          const go = () => onSelectDate?.(d.date);
           return (
             <G key={`pt-${d.date}`}>
+              {/* wide transparent hit target: tap jumps to Entry for that date.
+                  Rendered last (on top) so taps land on it, not the marker. */}
               {d.total !== null ? (
                 <G>
                   {selected && (
@@ -113,6 +119,17 @@ export function TrendChart({
                   >
                     {d.total}
                   </SvgText>
+                  {hasNote(d.entry) && (
+                    <SvgText
+                      x={sx(i)}
+                      y={sy(d.total) - 24}
+                      fontSize={12}
+                      textAnchor="middle"
+                      fill="#eab308"
+                    >
+                      ★
+                    </SvgText>
+                  )}
                 </G>
               ) : (
                 <Circle
@@ -125,6 +142,7 @@ export function TrendChart({
                   strokeDasharray="3 2"
                 />
               )}
+              <Circle cx={sx(i)} cy={cy} r={16} fill="transparent" onPress={go} />
             </G>
           );
         })}
@@ -142,6 +160,7 @@ export function TrendChart({
               textAnchor="middle"
               fill={d.date === selectedDate ? palette.text : palette.faint}
               fontWeight={d.date === selectedDate ? '700' : '400'}
+              onPress={() => onSelectDate?.(d.date)}
             >
               <TSpan x={sx(i)} dy="0">
                 {datePart}

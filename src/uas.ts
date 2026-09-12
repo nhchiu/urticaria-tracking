@@ -21,6 +21,8 @@ export interface DailyEntry {
   itch: Score0to3;
   /** Cached sum wheals + itch (0-6) */
   total: number;
+  /** Optional free-text note for the day (triggers, meds, sleep, …) */
+  note?: string;
 }
 
 export interface DayScore {
@@ -71,8 +73,23 @@ export function dailyTotal(wheals: Score0to3, itch: Score0to3): number {
   return wheals + itch;
 }
 
-export function makeEntry(date: string, wheals: Score0to3, itch: Score0to3): DailyEntry {
-  return { date, wheals, itch, total: dailyTotal(wheals, itch) };
+export const MAX_NOTE_LENGTH = 500;
+
+export function makeEntry(
+  date: string,
+  wheals: Score0to3,
+  itch: Score0to3,
+  note?: string,
+): DailyEntry {
+  const entry: DailyEntry = { date, wheals, itch, total: dailyTotal(wheals, itch) };
+  const trimmed = (note ?? '').trim().slice(0, MAX_NOTE_LENGTH);
+  if (trimmed) entry.note = trimmed;
+  return entry;
+}
+
+/** True when the entry carries a non-empty note. */
+export function hasNote(entry: DailyEntry | null | undefined): boolean {
+  return !!entry?.note?.trim();
 }
 
 export function isValidScore(n: unknown): n is Score0to3 {

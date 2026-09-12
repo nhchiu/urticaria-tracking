@@ -15,6 +15,7 @@ import {
   Portal,
   ProgressBar,
   Text,
+  TextInput,
   useTheme,
 } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -34,6 +35,7 @@ import {
   calcPast4Weeks,
   calcUAS7,
   dateKey,
+  hasNote,
   makeEntry,
   shortLabel,
   type DailyEntry,
@@ -131,6 +133,7 @@ export default function App() {
   const [selectedDate, setSelectedDate] = useState<string>(() => dateKey(new Date()));
   const [wheals, setWheals] = useState<Score0to3>(0);
   const [itch, setItch] = useState<Score0to3>(0);
+  const [note, setNote] = useState('');
   const [loaded, setLoaded] = useState(false);
   const [langPref, setLangPref] = useState<LangPref>('system');
   const [themePref, setThemePref] = useState<ThemePref>('system');
@@ -155,9 +158,11 @@ export default function App() {
     if (existing) {
       setWheals(existing.wheals);
       setItch(existing.itch);
+      setNote(existing.note ?? '');
     } else {
       setWheals(0);
       setItch(0);
+      setNote('');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate, loaded]);
@@ -217,7 +222,7 @@ export default function App() {
   }
 
   async function handleSave() {
-    const entry = makeEntry(selectedDate, wheals, itch);
+    const entry = makeEntry(selectedDate, wheals, itch, note);
     const next = { ...byDate, [selectedDate]: entry };
     await persist(next);
   }
@@ -228,6 +233,7 @@ export default function App() {
     await persist(next);
     setWheals(0);
     setItch(0);
+    setNote('');
   }
 
   const band = uas7.band;
@@ -248,11 +254,13 @@ export default function App() {
                     const active = d === selectedDate;
                     const isToday = d === dateKey(new Date());
                     const hasScore = !!byDate[d];
+                    const marked = hasNote(byDate[d]);
                     return (
                       <Chip
                         key={d}
                         selected={active}
                         showSelectedCheck={false}
+                        icon={marked ? 'star' : undefined}
                         onPress={() => setSelectedDate(d)}
                         style={[
                           styles.dateChip,
@@ -293,6 +301,22 @@ export default function App() {
         value={itch}
         onChange={setItch}
       />
+
+      <Card style={styles.card} mode="elevated">
+        <Card.Content>
+          <Text variant="titleMedium">{t.noteLabel}</Text>
+          <TextInput
+            mode="outlined"
+            multiline
+            numberOfLines={3}
+            value={note}
+            onChangeText={setNote}
+            placeholder={t.notePlaceholder}
+            maxLength={500}
+            style={styles.noteInput}
+          />
+        </Card.Content>
+      </Card>
 
       <Card style={styles.card} mode="elevated">
         <Card.Content>
@@ -353,9 +377,20 @@ export default function App() {
       </Text>
       <Card style={styles.card} mode="elevated">
         <Card.Content>
-          <TrendChart days={last7} palette={chartPalette} selectedDate={selectedDate} />
+          <TrendChart
+            days={last7}
+            palette={chartPalette}
+            selectedDate={selectedDate}
+            onSelectDate={(date) => {
+              setSelectedDate(date);
+              setTabIndex(0);
+            }}
+          />
           <Text variant="bodySmall" style={styles.hint}>
             {t.chartHint}
+          </Text>
+          <Text variant="bodySmall" style={styles.hint}>
+            {t.chartNoteHint}
           </Text>
         </Card.Content>
       </Card>
@@ -631,6 +666,7 @@ const styles = StyleSheet.create({
   legendDetail: { fontSize: 13, flex: 1, textAlign: 'right', opacity: 0.7 },
   dateStrip: { marginTop: 10 },
   dateChip: { marginRight: 8 },
+  noteInput: { marginTop: 8 },
   btnRow: { flexDirection: 'row', gap: 10, marginTop: 12 },
   btn: { flex: 1 },
   bandChip: { alignSelf: 'flex-start', marginTop: 8 },

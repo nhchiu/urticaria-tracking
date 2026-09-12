@@ -18,7 +18,14 @@ export async function loadEntries(): Promise<Record<string, DailyEntry>> {
         [0, 1, 2, 3].includes(v.wheals) &&
         [0, 1, 2, 3].includes(v.itch)
       ) {
-        clean[k] = { ...v, date: k, total: v.wheals + v.itch };
+        const row: DailyEntry = { ...v, date: k, total: v.wheals + v.itch };
+        // Keep notes as trimmed strings; drop empty / non-string values.
+        if (typeof v.note === 'string') {
+          const trimmed = v.note.trim().slice(0, 500);
+          if (trimmed) row.note = trimmed;
+          else delete row.note;
+        }
+        clean[k] = row;
       }
     }
     return clean;

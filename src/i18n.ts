@@ -46,6 +46,8 @@ export interface Strings {
   itchHint: string;
   whealsOptions: ScoreOption[];
   itchOptions: ScoreOption[];
+  noteLabel: string;
+  notePlaceholder: string;
   dailyUas: (date: string, total: number) => string;
   saveHintUpdate: string;
   saveHintRecord: string;
@@ -61,6 +63,7 @@ export interface Strings {
   sectionWeeks: string;
   thisWeek: string;
   chartHint: string;
+  chartNoteHint: string;
   missing: string;
   settings: string;
   done: string;
@@ -99,6 +102,8 @@ const en: Strings = {
     { value: 2, title: '2 — Moderate', detail: 'Troublesome but does not interfere with sleep/activity' },
     { value: 3, title: '3 — Intense', detail: 'Severe, interferes with sleep/activity' },
   ],
+  noteLabel: 'Note (optional)',
+  notePlaceholder: 'Triggers, meds, sleep, extra symptoms…',
   dailyUas: (date, total) => `Daily UAS for ${date}: ${total} / 6`,
   saveHintUpdate: 'tap Save to update.',
   saveHintRecord: 'tap Save to record.',
@@ -114,6 +119,7 @@ const en: Strings = {
   sectionWeeks: '4 · Past 4 weeks',
   thisWeek: 'This week',
   chartHint: 'Line = daily UAS (0–6). Hollow markers = missing days.',
+  chartNoteHint: '★ = day has a note.',
   missing: '–',
   settings: 'Settings',
   done: 'Done',
@@ -159,6 +165,8 @@ const zhHant: Strings = {
     { value: 2, title: '2 — 中度', detail: '會困擾，但不影響睡眠／日常活動' },
     { value: 3, title: '3 — 嚴重', detail: '嚴重搔癢，影響睡眠／日常活動' },
   ],
+  noteLabel: '備註（選填）',
+  notePlaceholder: '誘因、用藥、睡眠、其他症狀……',
   dailyUas: (date, total) => `${date} 每日 UAS：${total} / 6`,
   saveHintUpdate: '點「儲存」以更新。',
   saveHintRecord: '點「儲存」以紀錄。',
@@ -174,6 +182,7 @@ const zhHant: Strings = {
   sectionWeeks: '4 · 過去四週每週累積',
   thisWeek: '本週',
   chartHint: '折線＝每日 UAS（0–6）。空心點＝缺漏日期。',
+  chartNoteHint: '★＝該日有備註。',
   missing: '–',
   settings: '設定',
   done: '完成',

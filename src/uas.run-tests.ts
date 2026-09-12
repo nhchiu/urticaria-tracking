@@ -4,6 +4,7 @@ import {
   calcUAS7,
   dailyTotal,
   dateKey,
+  hasNote,
   last7Keys,
   makeEntry,
   severityFor,
@@ -27,6 +28,11 @@ function main(): void {
 
   const e = makeEntry('2026-09-05', 2, 3);
   assert(e.total === 5, 'makeEntry caches total');
+  assert(e.note === undefined && !hasNote(e), 'makeEntry omits note when empty');
+
+  const noted = makeEntry('2026-09-05', 1, 1, '  took antihistamine  ');
+  assert(noted.note === 'took antihistamine' && hasNote(noted), 'makeEntry trims and keeps note');
+  assert(!hasNote(null) && !hasNote(undefined), 'hasNote false for missing entry');
 
   const keys = last7Keys(new Date(2026, 8, 5));
   assert(keys.length === 7, 'last7Keys returns 7 days');
