@@ -58,13 +58,13 @@ export interface Strings {
   recordedDays: (n: number) => string;
   provisional: string;
   sectionTrend: string;
+  sectionWeeks: string;
+  thisWeek: string;
   chartHint: string;
-  history: string;
-  noEntry: string;
-  entrySub: (wheals: number, itch: number) => string;
   missing: string;
   settings: string;
   done: string;
+  tabs: { entry: string; summary: string; trend: string; weeks: string };
   language: string;
   theme: string;
   optSystem: string;
@@ -111,13 +111,13 @@ const en: Strings = {
   recordedDays: (n) => `${n} of 7 days recorded`,
   provisional: ' — sum is provisional until all 7 days are entered.',
   sectionTrend: '3 · 7-day trend',
+  sectionWeeks: '4 · Past 4 weeks',
+  thisWeek: 'This week',
   chartHint: 'Line = daily UAS (0–6). Hollow markers = missing days.',
-  history: 'History',
-  noEntry: 'No entry — tap to add',
-  entrySub: (w, i) => `Wheals ${w} · Itch ${i}`,
   missing: '–',
   settings: 'Settings',
   done: 'Done',
+  tabs: { entry: 'Entry', summary: 'Summary', trend: 'Trend', weeks: 'Weeks' },
   language: 'Language',
   theme: 'Theme',
   optSystem: 'System',
@@ -171,13 +171,13 @@ const zhHant: Strings = {
   recordedDays: (n) => `已紀錄 ${n}／7 天`,
   provisional: ' — 集滿 7 天前總分僅供參考。',
   sectionTrend: '3 · 7 天趨勢',
+  sectionWeeks: '4 · 過去四週每週累積',
+  thisWeek: '本週',
   chartHint: '折線＝每日 UAS（0–6）。空心點＝缺漏日期。',
-  history: '歷史紀錄',
-  noEntry: '尚無紀錄 — 點選以新增',
-  entrySub: (w, i) => `風疹塊 ${w} · 搔癢 ${i}`,
   missing: '–',
   settings: '設定',
   done: '完成',
+  tabs: { entry: '紀錄', summary: '總結', trend: '趨勢', weeks: '四週' },
   language: '語言',
   theme: '主題',
   optSystem: '跟隨系統',

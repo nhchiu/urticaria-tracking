@@ -1,5 +1,6 @@
 import {
   buildLast7,
+  calcPast4Weeks,
   calcUAS7,
   dailyTotal,
   dateKey,
@@ -61,6 +62,28 @@ function main(): void {
   assert(severityFor(27).key === 'moderate', 'band 27 = moderate');
   assert(severityFor(28).key === 'severe', 'band 28 = severe');
   assert(severityFor(42).key === 'severe', 'band 42 = severe');
+
+  // Past 4 weeks: 28 consecutive days with total = day index % 7
+  const ref = new Date(2026, 8, 5);
+  const four: Record<string, ReturnType<typeof makeEntry>> = {};
+  for (let back = 0; back < 28; back++) {
+    const d = new Date(ref);
+    d.setDate(d.getDate() - back);
+    const k = dateKey(d);
+    const tot = back % 7; // 0..6
+    const w = Math.min(3, tot) as 0 | 1 | 2 | 3;
+    four[k] = makeEntry(k, w, (tot - w) as 0 | 1 | 2 | 3);
+  }
+  const weeks = calcPast4Weeks(four, ref);
+  assert(weeks.length === 4, 'past4weeks returns 4 blocks');
+  assert(weeks[0].end === '2026-09-05' && weeks[0].start === '2026-08-30', `week0 window (${weeks[0].start}..${weeks[0].end})`);
+  assert(weeks[3].start === '2026-08-09' && weeks[3].end === '2026-08-15', `week3 window (${weeks[3].start}..${weeks[3].end})`);
+  assert(weeks.every((w) => w.complete && w.recordedDays === 7), 'full 28 days => all weeks complete');
+  const weekSums = weeks.map((w) => w.sum);
+  assert(weekSums[0] === 21, `week0 sums to 21 (${weekSums[0]})`);
+  assert(weeks[0].band.key === 'moderate', 'week0 band moderate');
+  const sparse = calcPast4Weeks({}, ref);
+  assert(sparse.every((w) => w.sum === 0 && !w.complete), 'empty history => zero incomplete weeks');
 
   if (process.exitCode) console.error('\nSome checks FAILED');
   else console.log('\nAll UAS7 logic checks passed.');

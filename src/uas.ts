@@ -143,8 +143,7 @@ export function calcUAS7(days: DayScore[]): UAS7Result {
   };
 }
 
-export function severityFor(uas7: number): SeverityBand {
-  if (uas7 <= 0) {
+export function severityFor(uas7: number): SeverityBand {  if (uas7 <= 0) {
     return {
       key: 'free',
       title: 'Urticaria-free',
@@ -187,4 +186,59 @@ export function severityFor(uas7: number): SeverityBand {
     description: 'Severe activity — please contact your clinician.',
     color: '#dc2626',
   };
+}
+
+export interface WeeklySum {
+  /** First day key (YYYY-MM-DD) of the 7-day block. */
+  start: string;
+  /** Last day key (YYYY-MM-DD) of the 7-day block. */
+  end: string;
+  /** Human label, e.g. "08/10 – 08/16". */
+  label: string;
+  sum: number;
+  recordedDays: number;
+  complete: boolean;
+  band: SeverityBand;
+}
+
+/**
+ * Accumulated UAS7 for each of the past 4 weeks, newest first.
+ * Week 0 = last 7 days (same window as the UAS7 summary),
+ * week 1 = days 8–14 ago, and so on.
+ */
+export function calcPast4Weeks(
+  byDate: Record<string, DailyEntry>,
+  ref: Date = new Date(),
+  lang: LabelLang = 'en',
+): WeeklySum[] {
+  const out: WeeklySum[] = [];
+  for (let w = 0; w < 4; w++) {
+    const end = new Date(ref);
+    end.setDate(end.getDate() - w * 7);
+    const start = new Date(ref);
+    start.setDate(start.getDate() - w * 7 - 6);
+    const startKey = dateKey(start);
+    const endKey = dateKey(end);
+    let sum = 0;
+    let recordedDays = 0;
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(start);
+      d.setDate(d.getDate() + i);
+      const entry = byDate[dateKey(d)];
+      if (entry) {
+        sum += entry.total;
+        recordedDays++;
+      }
+    }
+    out.push({
+      start: startKey,
+      end: endKey,
+      label: `${shortLabel(startKey, lang)} – ${shortLabel(endKey, lang)}`,
+      sum,
+      recordedDays,
+      complete: recordedDays === 7,
+      band: severityFor(sum),
+    });
+  }
+  return out;
 }

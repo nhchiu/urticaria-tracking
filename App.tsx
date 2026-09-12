@@ -1,13 +1,13 @@
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, View, useColorScheme, useWindowDimensions } from 'react-native';
+import { ScrollView, StyleSheet, View, useColorScheme, Pressable } from 'react-native';
 import {
   Appbar,
+  BottomNavigation,
   Button,
   Card,
   Chip,
   Dialog,
-  List,
   MD3DarkTheme,
   MD3LightTheme,
   PaperProvider,
@@ -15,6 +15,7 @@ import {
   ProgressBar,
   SegmentedButtons,
   Text,
+  useTheme,
 } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import {
@@ -30,6 +31,7 @@ import { DarkPalette, LightPalette, type Palette } from './src/theme';
 import { TrendChart } from './src/TrendChart';
 import {
   buildLast7,
+  calcPast4Weeks,
   calcUAS7,
   dateKey,
   makeEntry,
@@ -39,6 +41,14 @@ import {
 } from './src/uas';
 
 const MAX_UAS7 = 42;
+
+// Severity colors for the 0-3 score buttons: 0 white, 1 pink, 2 red, 3 purple.
+const SCORE_COLORS = [
+  { bg: '#ffffff', fg: '#1f2937' },
+  { bg: '#f9a8d4', fg: '#1f2937' },
+  { bg: '#ef4444', fg: '#ffffff' },
+  { bg: '#8b5cf6', fg: '#ffffff' },
+];
 
 const lightTheme = {
   ...MD3LightTheme,
@@ -62,6 +72,7 @@ function ScoreCard({
   value: Score0to3;
   onChange: (v: Score0to3) => void;
 }) {
+  const theme = useTheme();
   return (
     <Card style={styles.card} mode="elevated">
       <Card.Content>
@@ -69,24 +80,40 @@ function ScoreCard({
         <Text variant="bodySmall" style={styles.hint}>
           {hint}
         </Text>
-        <SegmentedButtons
-          style={styles.segmented}
-          value={String(value)}
-          onValueChange={(v) => onChange(Number(v) as Score0to3)}
-          buttons={[
-            { value: '0', label: '0' },
-            { value: '1', label: '1' },
-            { value: '2', label: '2' },
-            { value: '3', label: '3' },
-          ]}
-        />
+        <View style={styles.scoreRow}>
+          {[0, 1, 2, 3].map((n) => {
+            const active = value === n;
+            const c = SCORE_COLORS[n];
+            return (
+              <Button
+                key={n}
+                mode="contained"
+                buttonColor={c.bg}
+                textColor={c.fg}
+                icon={active ? 'check' : undefined}
+                onPress={() => onChange(n as Score0to3)}
+                style={[
+                  styles.scoreBtn,
+                  {
+                    borderWidth: active ? 2 : 0,
+                    borderColor: theme.colors.primary,
+                  },
+                ]}
+                contentStyle={styles.scoreContent}
+                labelStyle={styles.scoreLabel}
+              >
+                {String(n)}
+              </Button>
+            );
+          })}
+        </View>
         <View style={styles.legend}>
           {options.map((o) => (
             <View key={o.value} style={styles.legendRow}>
-              <Text variant="bodySmall" style={styles.legendTitle}>
+              <Text variant="bodyMedium" style={styles.legendTitle}>
                 {o.title}
               </Text>
-              <Text variant="bodySmall" style={styles.hint}>
+              <Text variant="bodySmall" style={[styles.hint, styles.legendDetail]}>
                 {o.detail}
               </Text>
             </View>
@@ -152,6 +179,7 @@ export default function App() {
 
   const last7 = useMemo(() => buildLast7(byDate, new Date(), lang), [byDate, lang]);
   const uas7 = useMemo(() => calcUAS7(last7), [last7]);
+  const past4Weeks = useMemo(() => calcPast4Weeks(byDate, new Date(), lang), [byDate, lang]);
   const todayTotal = wheals + itch;
 
   // Quick date strip: today + previous 13 days for picking which day to record.
@@ -199,10 +227,7 @@ export default function App() {
   const bandText = t.bands[band.key];
   const progress = Math.min(1, uas7.sum / MAX_UAS7);
 
-  // Responsive layout: single column on phones, two columns on wide screens.
-  const { width: windowWidth } = useWindowDimensions();
-  const wide = windowWidth >= 960;
-
+  // Tab scenes share state defined above.
   const entrySection = (
     <>
       <Text variant="titleMedium" style={styles.sectionTitle}>
@@ -288,7 +313,7 @@ export default function App() {
     </>
   );
 
-  const dashSection = (
+  const summarySection = (
     <>
       <Text variant="titleMedium" style={styles.sectionTitle}>
         {t.sectionSummary}
@@ -311,7 +336,11 @@ export default function App() {
           </Text>
         </Card.Content>
       </Card>
+    </>
+  );
 
+  const trendSection = (
+    <>
       <Text variant="titleMedium" style={styles.sectionTitle}>
         {t.sectionTrend}
       </Text>
@@ -323,21 +352,53 @@ export default function App() {
           </Text>
         </Card.Content>
       </Card>
+    </>
+  );
 
+  const weeksSection = (
+    <>
       <Text variant="titleMedium" style={styles.sectionTitle}>
-        {t.history}
+        {t.sectionWeeks}
       </Text>
       <Card style={styles.card} mode="elevated">
-        {[...last7].reverse().map((d, i, arr) => (
-          <List.Item
-            key={d.date}
-            title={`${d.date} (${d.label})`}
-            description={d.entry ? t.entrySub(d.entry.wheals, d.entry.itch) : t.noEntry}
-            onPress={() => setSelectedDate(d.date)}
-            right={() => <Text variant="titleLarge">{d.total !== null ? d.total : t.missing}</Text>}
-            style={i < arr.length - 1 ? styles.listDivider : undefined}
-          />
-        ))}
+        <Card.Content>
+          {past4Weeks.map((w, i) => {
+            const bandT = t.bands[w.band.key];
+            return (
+              <View key={w.start} style={i > 0 ? styles.weekBlockGap : undefined}>
+                <View style={styles.weekRow}>
+                  <View style={styles.weekLabel}>
+                    <Text variant="titleSmall">
+                      {w.label}
+                      {i === 0 ? ` · ${t.thisWeek}` : ''}
+                    </Text>
+                    <Text variant="bodySmall" style={styles.hint}>
+                      {t.recordedDays(w.recordedDays)}
+                      {!w.complete && t.provisional}
+                    </Text>
+                  </View>
+                  <View style={styles.weekSum}>
+                    <Text variant="headlineSmall">{w.sum}</Text>
+                    <Text variant="bodySmall" style={styles.hint}>
+                      / 42
+                    </Text>
+                  </View>
+                </View>
+                <Chip
+                  style={[styles.bandChip, { backgroundColor: w.band.color }]}
+                  textStyle={styles.bandChipText}
+                >
+                  {bandT.title}
+                </Chip>
+                <ProgressBar
+                  progress={Math.min(1, w.sum / MAX_UAS7)}
+                  color={w.band.color}
+                  style={styles.progress}
+                />
+              </View>
+            );
+          })}
+        </Card.Content>
       </Card>
 
       <Text variant="bodySmall" style={styles.footer}>
@@ -345,6 +406,38 @@ export default function App() {
       </Text>
     </>
   );
+
+  const [tabIndex, setTabIndex] = useState(0);
+  const routes = useMemo(
+    () => [
+      { key: 'entry', title: t.tabs.entry, focusedIcon: 'pencil-plus' },
+      { key: 'summary', title: t.tabs.summary, focusedIcon: 'gauge' },
+      { key: 'trend', title: t.tabs.trend, focusedIcon: 'chart-line' },
+      { key: 'weeks', title: t.tabs.weeks, focusedIcon: 'calendar-week' },
+    ],
+    [t],
+  );
+
+  const renderScene = ({ route }: { route: { key: string } }) => {
+    const body = (() => {
+      switch (route.key) {
+        case 'summary':
+          return summarySection;
+        case 'trend':
+          return trendSection;
+        case 'weeks':
+          return weeksSection;
+        case 'entry':
+        default:
+          return entrySection;
+      }
+    })();
+    return (
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.inner}>{body}</View>
+      </ScrollView>
+    );
+  };
 
   return (
     <SafeAreaProvider>
@@ -359,25 +452,18 @@ export default function App() {
             />
           </Appbar.Header>
 
-          <ScrollView contentContainerStyle={styles.content}>
-            <View style={[styles.inner, wide && styles.innerWide]}>
-              <Text variant="bodyMedium" style={styles.subtitle}>
-                {t.subtitle}
-              </Text>
+          <Text variant="bodyMedium" style={styles.subtitleBar}>
+            {t.subtitle}
+          </Text>
 
-              {wide ? (
-                <View style={styles.columns}>
-                  <View style={styles.column}>{entrySection}</View>
-                  <View style={styles.column}>{dashSection}</View>
-                </View>
-              ) : (
-                <>
-                  {entrySection}
-                  {dashSection}
-                </>
-              )}
-            </View>
-          </ScrollView>
+          <View style={styles.tabWrap}>
+            <BottomNavigation
+              navigationState={{ index: tabIndex, routes }}
+              onIndexChange={setTabIndex}
+              renderScene={renderScene}
+              shifting={false}
+            />
+          </View>
 
           <Portal>
             <Dialog visible={settingsVisible} onDismiss={() => setSettingsVisible(false)}>
@@ -444,17 +530,21 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   content: { padding: 16, paddingBottom: 48, alignItems: 'center' },
   inner: { width: '100%', maxWidth: 720 },
-  innerWide: { maxWidth: 1180 },
-  columns: { flexDirection: 'row', alignItems: 'flex-start', gap: 16 },
-  column: { flex: 1, minWidth: 0 },
+  subtitleBar: { paddingHorizontal: 16, paddingTop: 8 },
+  tabWrap: { flex: 1 },
   subtitle: { marginBottom: 8 },
   sectionTitle: { marginTop: 20, marginBottom: 8 },
   card: { marginBottom: 12 },
   hint: { marginTop: 4, opacity: 0.7 },
   segmented: { marginTop: 12 },
+  scoreRow: { flexDirection: 'row', gap: 10, marginTop: 12 },
+  scoreBtn: { flex: 1, borderRadius: 12 },
+  scoreContent: { height: 52 },
+  scoreLabel: { fontSize: 20, fontWeight: '800' },
   legend: { marginTop: 12 },
   legendRow: { marginTop: 8 },
   legendTitle: { fontWeight: '600' },
+  legendDetail: { fontSize: 13 },
   dateStrip: { marginTop: 10 },
   dateChip: { marginRight: 8 },
   btnRow: { flexDirection: 'row', gap: 10, marginTop: 12 },
@@ -462,7 +552,10 @@ const styles = StyleSheet.create({
   bandChip: { alignSelf: 'flex-start', marginTop: 8 },
   bandChipText: { color: '#fff', fontWeight: '700' },
   progress: { marginTop: 12, height: 8, borderRadius: 4 },
-  listDivider: { borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.08)' },
+  weekBlockGap: { marginTop: 20 },
+  weekRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  weekLabel: { flex: 1 },
+  weekSum: { alignItems: 'flex-end', marginLeft: 12 },
   dialogGap: { marginTop: 16 },
   footer: { marginTop: 16, opacity: 0.6, lineHeight: 18 },
 });

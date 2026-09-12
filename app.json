@@ -55,6 +55,12 @@
         "projectId": "1a5567ac-c126-4aa5-9131-c4219c007efa"
       }
     },
-    "owner": "nhchiu"
+    "owner": "nhchiu",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/1a5567ac-c126-4aa5-9131-c4219c007efa"
+    }
   }
 }
