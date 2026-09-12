@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, View, useColorScheme, Pressable } from 'react-native';
+import { PanResponder, ScrollView, StyleSheet, View, useColorScheme, Pressable } from 'react-native';
 import {
   Appbar,
   BottomNavigation,
@@ -88,9 +88,10 @@ function ScoreCard({
               <Button
                 key={n}
                 mode="contained"
+                compact
                 buttonColor={c.bg}
                 textColor={c.fg}
-                icon={active ? 'check' : undefined}
+                accessibilityState={{ selected: active }}
                 onPress={() => onChange(n as Score0to3)}
                 style={[
                   styles.scoreBtn,
@@ -102,7 +103,7 @@ function ScoreCard({
                 contentStyle={styles.scoreContent}
                 labelStyle={styles.scoreLabel}
               >
-                {String(n)}
+                {active ? `✓ ${n}` : String(n)}
               </Button>
             );
           })}
@@ -113,7 +114,7 @@ function ScoreCard({
               <Text variant="bodyMedium" style={styles.legendTitle}>
                 {o.title}
               </Text>
-              <Text variant="bodySmall" style={[styles.hint, styles.legendDetail]}>
+              <Text variant="bodySmall" style={styles.legendDetail}>
                 {o.detail}
               </Text>
             </View>
@@ -418,6 +419,25 @@ export default function App() {
     [t],
   );
 
+  // Horizontal swipe switches tabs. Direction-locked so vertical scrolling
+  // and the horizontal date strip keep their own gestures.
+  const swipeResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, g) =>
+          Math.abs(g.dx) > 24 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
+        onPanResponderRelease: (_, g) => {
+          if (Math.abs(g.dx) < 60) return;
+          if (Math.abs(g.dx) < Math.abs(g.dy) * 1.5) return;
+          setTabIndex((i) => {
+            if (g.dx < 0) return Math.min(routes.length - 1, i + 1);
+            return Math.max(0, i - 1);
+          });
+        },
+      }),
+    [routes.length],
+  );
+
   const renderScene = ({ route }: { route: { key: string } }) => {
     const body = (() => {
       switch (route.key) {
@@ -456,7 +476,7 @@ export default function App() {
             {t.subtitle}
           </Text>
 
-          <View style={styles.tabWrap}>
+          <View style={styles.tabWrap} {...swipeResponder.panHandlers}>
             <BottomNavigation
               navigationState={{ index: tabIndex, routes }}
               onIndexChange={setTabIndex}
@@ -537,14 +557,14 @@ const styles = StyleSheet.create({
   card: { marginBottom: 12 },
   hint: { marginTop: 4, opacity: 0.7 },
   segmented: { marginTop: 12 },
-  scoreRow: { flexDirection: 'row', gap: 10, marginTop: 12 },
-  scoreBtn: { flex: 1, borderRadius: 12 },
-  scoreContent: { height: 52 },
-  scoreLabel: { fontSize: 20, fontWeight: '800' },
+  scoreRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
+  scoreBtn: { flex: 1, minWidth: 0, borderRadius: 12 },
+  scoreContent: { height: 52, paddingHorizontal: 4 },
+  scoreLabel: { fontSize: 20, fontWeight: '800', marginHorizontal: 0 },
   legend: { marginTop: 12 },
-  legendRow: { marginTop: 8 },
-  legendTitle: { fontWeight: '600' },
-  legendDetail: { fontSize: 13 },
+  legendRow: { marginTop: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 },
+  legendTitle: { fontWeight: '600', flexShrink: 0 },
+  legendDetail: { fontSize: 13, flex: 1, textAlign: 'right', opacity: 0.7 },
   dateStrip: { marginTop: 10 },
   dateChip: { marginRight: 8 },
   btnRow: { flexDirection: 'row', gap: 10, marginTop: 12 },
