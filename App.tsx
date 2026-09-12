@@ -10,10 +10,10 @@ import {
   Dialog,
   MD3DarkTheme,
   MD3LightTheme,
+  Menu,
   PaperProvider,
   Portal,
   ProgressBar,
-  SegmentedButtons,
   Text,
   useTheme,
 } from 'react-native-paper';
@@ -136,6 +136,8 @@ export default function App() {
   const [themePref, setThemePref] = useState<ThemePref>('system');
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [langMenuVisible, setLangMenuVisible] = useState(false);
+  const [themeMenuVisible, setThemeMenuVisible] = useState(false);
 
   useEffect(() => {
     Promise.all([loadEntries(), loadSettings()]).then(([entries, settings]) => {
@@ -162,6 +164,10 @@ export default function App() {
 
   const lang = resolveLang(langPref);
   const t: Strings = useMemo(() => getStrings(lang), [lang]);
+  const langLabel =
+    langPref === 'system' ? t.optSystem : langPref === 'en' ? t.optEnglish : t.optChinese;
+  const themeLabel =
+    themePref === 'system' ? t.optSystem : themePref === 'light' ? t.optLight : t.optDark;
   const isDark = themePref === 'dark' || (themePref === 'system' && systemScheme === 'dark');
   const paperTheme = isDark ? darkTheme : lightTheme;
 
@@ -490,29 +496,83 @@ export default function App() {
               <Dialog.Title>{t.settings}</Dialog.Title>
               <Dialog.Content>
                 <Text variant="titleSmall">{t.language}</Text>
-                <SegmentedButtons
-                  style={styles.segmented}
-                  value={langPref}
-                  onValueChange={(v) => changeLang(v as LangPref)}
-                  buttons={[
-                    { value: 'system', label: t.optSystem },
-                    { value: 'en', label: t.optEnglish },
-                    { value: 'zh-Hant', label: t.optChinese },
-                  ]}
-                />
+                <Menu
+                  visible={langMenuVisible}
+                  onDismiss={() => setLangMenuVisible(false)}
+                  anchor={
+                    <Button
+                      mode="outlined"
+                      icon="chevron-down"
+                      onPress={() => setLangMenuVisible(true)}
+                      style={styles.dropdown}
+                      contentStyle={styles.dropdownContent}
+                    >
+                      {langLabel}
+                    </Button>
+                  }
+                >
+                  <Menu.Item
+                    onPress={() => {
+                      changeLang('system');
+                      setLangMenuVisible(false);
+                    }}
+                    title={t.optSystem}
+                  />
+                  <Menu.Item
+                    onPress={() => {
+                      changeLang('en');
+                      setLangMenuVisible(false);
+                    }}
+                    title={t.optEnglish}
+                  />
+                  <Menu.Item
+                    onPress={() => {
+                      changeLang('zh-Hant');
+                      setLangMenuVisible(false);
+                    }}
+                    title={t.optChinese}
+                  />
+                </Menu>
                 <Text variant="titleSmall" style={styles.dialogGap}>
                   {t.theme}
                 </Text>
-                <SegmentedButtons
-                  style={styles.segmented}
-                  value={themePref}
-                  onValueChange={(v) => changeTheme(v as ThemePref)}
-                  buttons={[
-                    { value: 'system', label: t.optSystem },
-                    { value: 'light', label: t.optLight },
-                    { value: 'dark', label: t.optDark },
-                  ]}
-                />
+                <Menu
+                  visible={themeMenuVisible}
+                  onDismiss={() => setThemeMenuVisible(false)}
+                  anchor={
+                    <Button
+                      mode="outlined"
+                      icon="chevron-down"
+                      onPress={() => setThemeMenuVisible(true)}
+                      style={styles.dropdown}
+                      contentStyle={styles.dropdownContent}
+                    >
+                      {themeLabel}
+                    </Button>
+                  }
+                >
+                  <Menu.Item
+                    onPress={() => {
+                      changeTheme('system');
+                      setThemeMenuVisible(false);
+                    }}
+                    title={t.optSystem}
+                  />
+                  <Menu.Item
+                    onPress={() => {
+                      changeTheme('light');
+                      setThemeMenuVisible(false);
+                    }}
+                    title={t.optLight}
+                  />
+                  <Menu.Item
+                    onPress={() => {
+                      changeTheme('dark');
+                      setThemeMenuVisible(false);
+                    }}
+                    title={t.optDark}
+                  />
+                </Menu>
               </Dialog.Content>
               <Dialog.Actions>
                 <Button onPress={() => setSettingsVisible(false)}>{t.done}</Button>
@@ -556,7 +616,8 @@ const styles = StyleSheet.create({
   sectionTitle: { marginTop: 20, marginBottom: 8 },
   card: { marginBottom: 12 },
   hint: { marginTop: 4, opacity: 0.7 },
-  segmented: { marginTop: 12 },
+  dropdown: { marginTop: 8, alignSelf: 'stretch' },
+  dropdownContent: { justifyContent: 'space-between' },
   scoreRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
   scoreBtn: { flex: 1, minWidth: 0, borderRadius: 12 },
   scoreContent: { height: 52, paddingHorizontal: 4 },
