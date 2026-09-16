@@ -180,11 +180,11 @@ export default function App() {
   const lang = resolveLang(langPref);
   const t: Strings = useMemo(() => getStrings(lang), [lang]);
 
-  // Web tab title follows the effective language + nickname (web-only).
+  // Web tab title follows the effective language (nickname shows in the app header).
   useEffect(() => {
     if (typeof document === 'undefined') return;
-    document.title = t.pageTitle(nickname.trim());
-  }, [t, nickname]);
+    document.title = t.pageTitle('');
+  }, [t]);
   const langLabel =
     langPref === 'system' ? t.optSystem : langPref === 'en' ? t.optEnglish : t.optChinese;
   const themeLabel =
@@ -552,7 +552,7 @@ export default function App() {
       <PaperProvider theme={paperTheme}>
         <View style={[styles.root, { backgroundColor: paperTheme.colors.background }]}>
           <Appbar.Header>
-            <Appbar.Content title={t.appName} />
+            <Appbar.Content title={t.pageTitle(nickname.trim())} />
             <Appbar.Action
               icon="cog"
               accessibilityLabel={t.settings}
