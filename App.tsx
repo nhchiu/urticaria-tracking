@@ -35,6 +35,7 @@ import {
   calcPast4Weeks,
   calcUAS7,
   dateKey,
+  earliestEntryDate,
   hasNote,
   makeEntry,
   shortLabel,
@@ -192,6 +193,7 @@ export default function App() {
   const last7 = useMemo(() => buildLast7(byDate, new Date(), lang), [byDate, lang]);
   const uas7 = useMemo(() => calcUAS7(last7), [last7]);
   const past4Weeks = useMemo(() => calcPast4Weeks(byDate, new Date(), lang), [byDate, lang]);
+  const firstDate = useMemo(() => earliestEntryDate(byDate), [byDate]);
   const todayTotal = wheals + itch;
 
   // Quick date strip: today + previous 13 days for picking which day to record.
@@ -341,6 +343,10 @@ export default function App() {
           </View>
         </Card.Content>
       </Card>
+
+      <Text variant="bodySmall" style={styles.footer}>
+        {firstDate ? t.firstRecord(firstDate) : t.noRecordsYet}
+      </Text>
     </>
   );
 

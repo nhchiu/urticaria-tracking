@@ -4,6 +4,7 @@ import {
   calcUAS7,
   dailyTotal,
   dateKey,
+  earliestEntryDate,
   hasNote,
   last7Keys,
   makeEntry,
@@ -90,6 +91,14 @@ function main(): void {
   assert(weeks[0].band.key === 'moderate', 'week0 band moderate');
   const sparse = calcPast4Weeks({}, ref);
   assert(sparse.every((w) => w.sum === 0 && !w.complete), 'empty history => zero incomplete weeks');
+
+  assert(earliestEntryDate({}) === null, 'no entries => null first date');
+  assert(earliestEntryDate(full) === '2026-08-30', `earliest of full week (${earliestEntryDate(full)})`);
+  assert(
+    earliestEntryDate({ '2026-09-05': full['2026-09-05'], '2026-08-31': full['2026-08-31'] }) ===
+      '2026-08-31',
+    'earliest picks min key regardless of insertion order',
+  );
 
   if (process.exitCode) console.error('\nSome checks FAILED');
   else console.log('\nAll UAS7 logic checks passed.');

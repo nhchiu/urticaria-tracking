@@ -148,6 +148,15 @@ export function buildLast7(
   }));
 }
 
+/** Earliest stored entry date (YYYY-MM-DD), or null when nothing is recorded. */
+export function earliestEntryDate(byDate: Record<string, DailyEntry>): string | null {
+  let first: string | null = null;
+  for (const key of Object.keys(byDate)) {
+    if (first === null || key < first) first = key;
+  }
+  return first;
+}
+
 export function calcUAS7(days: DayScore[]): UAS7Result {
   const recorded = days.filter((d) => d.total !== null);
   const sum = recorded.reduce((acc, d) => acc + (d.total ?? 0), 0);

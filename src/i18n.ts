@@ -40,6 +40,8 @@ export interface Strings {
   whichDay: string;
   today: string;
   recordingFor: string;
+  firstRecord: (date: string) => string;
+  noRecordsYet: string;
   whealsLabel: string;
   whealsHint: string;
   itchLabel: string;
@@ -85,6 +87,8 @@ const en: Strings = {
   whichDay: 'Which day?',
   today: 'Today',
   recordingFor: 'Recording for:',
+  firstRecord: (date) => `First record: ${date}`,
+  noRecordsYet: 'No entries yet.',
   whealsLabel: 'Wheals (hives) — 0 to 3',
   whealsHint: 'Amount of wheals in the last 24 hours',
   itchLabel: 'Itch (pruritus) — 0 to 3',
@@ -147,6 +151,8 @@ const zhHant: Strings = {
   whichDay: '選擇日期',
   today: '今天',
   recordingFor: '紀錄日期：',
+  firstRecord: (date) => `首次紀錄：${date}`,
+  noRecordsYet: '尚無紀錄。',
   whealsLabel: '風疹塊 — 0 至 3',
   whealsHint: '過去 24 小時內的風疹塊數量',
   itchLabel: '搔癢 — 0 至 3',
