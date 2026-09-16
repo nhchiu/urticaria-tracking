@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SETTINGS_KEY, type Settings } from './i18n';
+import { MAX_NICKNAME_LENGTH, SETTINGS_KEY, type Settings } from './i18n';
 import type { DailyEntry } from './uas';
 
 const KEY = '@uas7_entries_v1';
@@ -42,7 +42,11 @@ export async function clearEntries(): Promise<void> {
   await AsyncStorage.removeItem(KEY);
 }
 
-const DEFAULT_SETTINGS: Settings = { lang: 'system', theme: 'system' };
+const DEFAULT_SETTINGS: Settings = { lang: 'system', theme: 'system', nickname: '', nicknameAsked: false };
+
+export function cleanNickname(raw: unknown): string {
+  return typeof raw === 'string' ? raw.trim().slice(0, MAX_NICKNAME_LENGTH) : '';
+}
 
 export async function loadSettings(): Promise<Settings> {
   try {
@@ -52,6 +56,8 @@ export async function loadSettings(): Promise<Settings> {
     return {
       lang: parsed.lang === 'en' || parsed.lang === 'zh-Hant' ? parsed.lang : 'system',
       theme: parsed.theme === 'light' || parsed.theme === 'dark' ? parsed.theme : 'system',
+      nickname: cleanNickname(parsed.nickname),
+      nicknameAsked: parsed.nicknameAsked === true,
     };
   } catch {
     return DEFAULT_SETTINGS;

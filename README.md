@@ -12,6 +12,7 @@ UAS7 urticaria diary for Android and iOS, built with Expo React Native. Record d
 - History list for the last 7 days, tap to edit
 - 14-day date picker (today + previous 13 days)
 - Bilingual UI: English / 繁體中文 (follows system locale, overridable)
+- Optional nickname: asked once on first launch, editable in Settings, shown in the page title
 - Light / dark / system theme (Material 3 via react-native-paper)
 - Local persistence with AsyncStorage (no backend, works offline)
 - Responsive layout: single column on phones, two columns ≥960px (web/tablet)

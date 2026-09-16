@@ -21,13 +21,14 @@ import {
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import {
   getStrings,
+  MAX_NICKNAME_LENGTH,
   resolveLang,
   type LangPref,
   type ScoreOption,
   type Strings,
   type ThemePref,
 } from './src/i18n';
-import { loadEntries, loadSettings, saveEntries, saveSettings } from './src/storage';
+import { cleanNickname, loadEntries, loadSettings, saveEntries, saveSettings } from './src/storage';
 import { DarkPalette, LightPalette, type Palette } from './src/theme';
 import { TrendChart } from './src/TrendChart';
 import {
@@ -138,6 +139,11 @@ export default function App() {
   const [loaded, setLoaded] = useState(false);
   const [langPref, setLangPref] = useState<LangPref>('system');
   const [themePref, setThemePref] = useState<ThemePref>('system');
+  const [nickname, setNickname] = useState('');
+  const [nicknameAsked, setNicknameAsked] = useState(false);
+  const [welcomeVisible, setWelcomeVisible] = useState(false);
+  const [welcomeDraft, setWelcomeDraft] = useState('');
+  const [settingsDraft, setSettingsDraft] = useState('');
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [langMenuVisible, setLangMenuVisible] = useState(false);
@@ -148,6 +154,9 @@ export default function App() {
       setByDate(entries);
       setLangPref(settings.lang);
       setThemePref(settings.theme);
+      setNickname(settings.nickname);
+      setNicknameAsked(settings.nicknameAsked);
+      if (!settings.nicknameAsked) setWelcomeVisible(true);
       setLoaded(true);
     });
   }, []);
@@ -170,6 +179,12 @@ export default function App() {
 
   const lang = resolveLang(langPref);
   const t: Strings = useMemo(() => getStrings(lang), [lang]);
+
+  // Web tab title follows the effective language + nickname (web-only).
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    document.title = t.pageTitle(nickname.trim());
+  }, [t, nickname]);
   const langLabel =
     langPref === 'system' ? t.optSystem : langPref === 'en' ? t.optEnglish : t.optChinese;
   const themeLabel =
@@ -215,12 +230,40 @@ export default function App() {
 
   async function changeLang(v: LangPref) {
     setLangPref(v);
-    await saveSettings({ lang: v, theme: themePref });
+    await saveSettings({ lang: v, theme: themePref, nickname, nicknameAsked });
   }
 
   async function changeTheme(v: ThemePref) {
     setThemePref(v);
-    await saveSettings({ lang: langPref, theme: v });
+    await saveSettings({ lang: langPref, theme: v, nickname, nicknameAsked });
+  }
+
+  async function saveWelcomeNickname(draft: string) {
+    const clean = cleanNickname(draft);
+    setNickname(clean);
+    setNicknameAsked(true);
+    setWelcomeVisible(false);
+    await saveSettings({ lang: langPref, theme: themePref, nickname: clean, nicknameAsked: true });
+  }
+
+  async function skipWelcomeNickname() {
+    setNicknameAsked(true);
+    setWelcomeVisible(false);
+    await saveSettings({ lang: langPref, theme: themePref, nickname, nicknameAsked: true });
+  }
+
+  function openSettings() {
+    setSettingsDraft(nickname);
+    setSettingsVisible(true);
+  }
+
+  async function closeSettings() {
+    const clean = cleanNickname(settingsDraft);
+    if (clean !== nickname) {
+      setNickname(clean);
+      await saveSettings({ lang: langPref, theme: themePref, nickname: clean, nicknameAsked });
+    }
+    setSettingsVisible(false);
   }
 
   async function handleSave() {
@@ -513,7 +556,7 @@ export default function App() {
             <Appbar.Action
               icon="cog"
               accessibilityLabel={t.settings}
-              onPress={() => setSettingsVisible(true)}
+              onPress={openSettings}
             />
           </Appbar.Header>
 
@@ -531,7 +574,29 @@ export default function App() {
           </View>
 
           <Portal>
-            <Dialog visible={settingsVisible} onDismiss={() => setSettingsVisible(false)}>
+            <Dialog visible={welcomeVisible} dismissable={false}>
+              <Dialog.Title>{t.welcomeTitle}</Dialog.Title>
+              <Dialog.Content>
+                <Text variant="bodyMedium">{t.welcomeMessage}</Text>
+                <TextInput
+                  mode="outlined"
+                  value={welcomeDraft}
+                  onChangeText={setWelcomeDraft}
+                  placeholder={t.nicknamePlaceholder}
+                  maxLength={MAX_NICKNAME_LENGTH}
+                  autoFocus
+                  style={styles.noteInput}
+                />
+              </Dialog.Content>
+              <Dialog.Actions>
+                <Button onPress={skipWelcomeNickname}>{t.skip}</Button>
+                <Button mode="contained" onPress={() => saveWelcomeNickname(welcomeDraft)}>
+                  {t.saveButton}
+                </Button>
+              </Dialog.Actions>
+            </Dialog>
+
+            <Dialog visible={settingsVisible} onDismiss={closeSettings}>
               <Dialog.Title>{t.settings}</Dialog.Title>
               <Dialog.Content>
                 <Text variant="titleSmall">{t.language}</Text>
@@ -612,12 +677,23 @@ export default function App() {
                     title={t.optDark}
                   />
                 </Menu>
+                <Text variant="titleSmall" style={styles.dialogGap}>
+                  {t.nicknameLabel}
+                </Text>
+                <TextInput
+                  mode="outlined"
+                  value={settingsDraft}
+                  onChangeText={setSettingsDraft}
+                  placeholder={t.nicknamePlaceholder}
+                  maxLength={MAX_NICKNAME_LENGTH}
+                  style={styles.noteInput}
+                />
                 <Text variant="bodySmall" style={styles.copyright}>
                   © 2026 nhchiu
                 </Text>
               </Dialog.Content>
               <Dialog.Actions>
-                <Button onPress={() => setSettingsVisible(false)}>{t.done}</Button>
+                <Button onPress={closeSettings}>{t.done}</Button>
               </Dialog.Actions>
             </Dialog>
 

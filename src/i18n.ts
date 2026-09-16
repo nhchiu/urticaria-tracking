@@ -8,9 +8,16 @@ export type ThemePref = 'system' | 'light' | 'dark';
 export interface Settings {
   lang: LangPref;
   theme: ThemePref;
+  /** Optional user nickname, shown in the page title when non-empty. */
+  nickname: string;
+  /** True once the first-run nickname prompt has been shown. */
+  nicknameAsked: boolean;
 }
 
 export const SETTINGS_KEY = '@uas7_settings_v1';
+
+/** Max nickname characters (enforced on save). */
+export const MAX_NICKNAME_LENGTH = 30;
 
 export function deviceLang(): Lang {
   try {
@@ -58,6 +65,13 @@ export interface Strings {
   deleteTitle: string;
   deleteMessage: (date: string) => string;
   cancel: string;
+  skip: string;
+  saveButton: string;
+  welcomeTitle: string;
+  welcomeMessage: string;
+  nicknameLabel: string;
+  nicknamePlaceholder: string;
+  pageTitle: (nickname: string) => string;
   sectionSummary: string;
   recordedDays: (n: number) => string;
   sectionTrend: string;
@@ -115,6 +129,13 @@ const en: Strings = {
   deleteTitle: 'Delete entry?',
   deleteMessage: (date) => `Remove the entry for ${date}?`,
   cancel: 'Cancel',
+  skip: 'Skip',
+  saveButton: 'Save',
+  welcomeTitle: 'Welcome!',
+  welcomeMessage: 'What should we call you? (optional)',
+  nicknameLabel: 'Nickname (optional)',
+  nicknamePlaceholder: 'e.g. Alex',
+  pageTitle: (nickname) => (nickname ? `UAS7 Diary - ${nickname}` : 'UAS7 Diary'),
   sectionSummary: 'UAS7 summary (last 7 days)',
   recordedDays: (n) => `${n} of 7 days recorded`,
   sectionTrend: '7-day trend',
@@ -179,6 +200,13 @@ const zhHant: Strings = {
   deleteTitle: '刪除紀錄？',
   deleteMessage: (date) => `要刪除 ${date} 的紀錄嗎？`,
   cancel: '取消',
+  skip: '略過',
+  saveButton: '儲存',
+  welcomeTitle: '歡迎！',
+  welcomeMessage: '怎麼稱呼你？（選填）',
+  nicknameLabel: '暱稱（選填）',
+  nicknamePlaceholder: '例如：小明',
+  pageTitle: (nickname) => (nickname ? `蕁麻疹日記 - ${nickname}` : '蕁麻疹日記'),
   sectionSummary: 'UAS7 總結（過去 7 天）',
   recordedDays: (n) => `已紀錄 ${n}／7 天`,
   sectionTrend: '7 天趨勢',
