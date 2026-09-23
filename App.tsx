@@ -602,6 +602,8 @@ export default function App() {
               onIndexChange={setTabIndex}
               renderScene={renderScene}
               shifting={false}
+              sceneAnimationEnabled
+              sceneAnimationType="shifting"
             />
           </View>
 
