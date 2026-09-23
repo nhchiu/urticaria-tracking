@@ -1,89 +1,124 @@
+import { MD3DarkTheme, MD3LightTheme, type MD3Theme } from 'react-native-paper';
+import type { SeverityBandKey } from './uas';
+
+const FONT_FAMILY = "'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif";
+
+/** Apply a single coherent font stack to every MD3 type variant. */
+function stackFonts(theme: MD3Theme): MD3Theme {
+  const fonts: Record<string, object> = {};
+  for (const [k, v] of Object.entries(theme.fonts)) {
+    fonts[k] = { ...v, fontFamily: FONT_FAMILY };
+  }
+  return { ...theme, fonts: fonts as MD3Theme['fonts'] };
+}
+
+const lightColors = {
+  primary: '#1d4ed8',
+  onPrimary: '#ffffff',
+  primaryContainer: '#dbe5ff',
+  onPrimaryContainer: '#001a44',
+  secondary: '#7c3aed',
+  onSecondary: '#ffffff',
+  secondaryContainer: '#ece6ff',
+  onSecondaryContainer: '#22005c',
+  tertiary: '#be2875',
+  onTertiary: '#ffffff',
+  tertiaryContainer: '#ffd8e4',
+  onTertiaryContainer: '#3e0020',
+  error: '#ba1a1a',
+  onError: '#ffffff',
+  errorContainer: '#ffdad6',
+  onErrorContainer: '#410002',
+  background: '#f6f7f9',
+  onBackground: '#1a1c1e',
+  surface: '#ffffff',
+  onSurface: '#1a1c1e',
+  surfaceVariant: '#e2e4ea',
+  onSurfaceVariant: '#45474e',
+  outline: '#76787f',
+  outlineVariant: '#c5c7cd',
+  inverseSurface: '#2f3136',
+  inverseOnSurface: '#f1f2f5',
+};
+
+const darkColors = {
+  primary: '#93c5fd',
+  onPrimary: '#0a2840',
+  primaryContainer: '#1e3a5f',
+  onPrimaryContainer: '#d7e5ff',
+  secondary: '#c4b5fd',
+  onSecondary: '#302253',
+  secondaryContainer: '#402e61',
+  onSecondaryContainer: '#e8ddff',
+  tertiary: '#f1a9cd',
+  onTertiary: '#481f3c',
+  tertiaryContainer: '#7c2f58',
+  onTertiaryContainer: '#ffd8e4',
+  error: '#f2b8b5',
+  onError: '#601410',
+  errorContainer: '#8c1d18',
+  onErrorContainer: '#f9dedc',
+  background: '#0f1215',
+  onBackground: '#e3e5e9',
+  surface: '#141719',
+  onSurface: '#e3e5e9',
+  surfaceVariant: '#40444a',
+  onSurfaceVariant: '#c5c8ce',
+  outline: '#8f939b',
+  outlineVariant: '#40444a',
+  inverseSurface: '#e3e5e9',
+  inverseOnSurface: '#141719',
+};
+
+export const lightTheme: MD3Theme = stackFonts({
+  ...MD3LightTheme,
+  colors: { ...MD3LightTheme.colors, ...lightColors },
+});
+
+export const darkTheme: MD3Theme = stackFonts({
+  ...MD3DarkTheme,
+  colors: { ...MD3DarkTheme.colors, ...darkColors },
+});
+
+export interface Tone {
+  bg: string;
+  fg: string;
+}
+
+/**
+ * 0–3 score severity tones, tuned for readable contrast in each mode.
+ * 0 neutral · 1 pink/rose · 2 red · 3 violet.
+ */
+export const SCORE_TONES: Record<'light' | 'dark', Tone[]> = {
+  light: [
+    { bg: '#eceff3', fg: '#1a1d21' },
+    { bg: '#f9a8d4', fg: '#3b0a2c' },
+    { bg: '#ef4444', fg: '#ffffff' },
+    { bg: '#8b5cf6', fg: '#ffffff' },
+  ],
+  dark: [
+    { bg: '#262a30', fg: '#d4d8de' },
+    { bg: '#a4496f', fg: '#ffffff' },
+    { bg: '#ef4444', fg: '#ffffff' },
+    { bg: '#8b5cf6', fg: '#ffffff' },
+  ],
+};
+
+/** Legible label color on each severity band chip (bands keep their accent bg). */
+export const BAND_TEXT: Record<SeverityBandKey, string> = {
+  free: '#ffffff',
+  'well-controlled': '#ffffff',
+  mild: '#fff3cd',
+  moderate: '#ffffff',
+  severe: '#ffffff',
+};
+
+/** The chart consumes these semantic roles directly from the active MD3 theme. */
 export interface Palette {
-  mode: 'light' | 'dark';
-  background: string;
   card: string;
   text: string;
-  subtext: string;
   faint: string;
-  border: string;
-  inputBg: string;
-  chipBg: string;
-  chipText: string;
-  activeChipBg: string;
-  activeChipText: string;
-  optionActiveBg: string;
-  optionActiveText: string;
-  primaryBtnBg: string;
-  primaryBtnText: string;
-  dangerBg: string;
-  dangerText: string;
-  barTrack: string;
   barFill: string;
   barFillSelected: string;
   barEmptyBorder: string;
-  progressTrack: string;
-  shadow: string;
-  statusBar: 'auto' | 'light' | 'dark';
-}
-
-export const LightPalette: Palette = {
-  mode: 'light',
-  background: '#f1f5f9',
-  card: '#ffffff',
-  text: '#0f172a',
-  subtext: '#475569',
-  faint: '#64748b',
-  border: '#e2e8f0',
-  inputBg: '#f8fafc',
-  chipBg: '#f1f5f9',
-  chipText: '#334155',
-  activeChipBg: '#0f172a',
-  activeChipText: '#ffffff',
-  optionActiveBg: '#eff6ff',
-  optionActiveText: '#1d4ed8',
-  primaryBtnBg: '#0f172a',
-  primaryBtnText: '#ffffff',
-  dangerBg: '#fee2e2',
-  dangerText: '#b91c1c',
-  barTrack: '#f1f5f9',
-  barFill: '#2563eb',
-  barFillSelected: '#7c3aed',
-  barEmptyBorder: '#cbd5e1',
-  progressTrack: '#e2e8f0',
-  shadow: '0 2px 6px rgba(0,0,0,0.05)',
-  statusBar: 'dark',
-};
-
-export const DarkPalette: Palette = {
-  mode: 'dark',
-  background: '#0b1220',
-  card: '#16202f',
-  text: '#f1f5f9',
-  subtext: '#cbd5e1',
-  faint: '#94a3b8',
-  border: '#2b3a4f',
-  inputBg: '#0f1929',
-  chipBg: '#223047',
-  chipText: '#e2e8f0',
-  activeChipBg: '#e2e8f0',
-  activeChipText: '#0f172a',
-  optionActiveBg: '#1e3a5f',
-  optionActiveText: '#93c5fd',
-  primaryBtnBg: '#e2e8f0',
-  primaryBtnText: '#0f172a',
-  dangerBg: '#450a0a',
-  dangerText: '#fca5a5',
-  barTrack: '#223047',
-  barFill: '#60a5fa',
-  barFillSelected: '#a78bfa',
-  barEmptyBorder: '#475569',
-  progressTrack: '#2b3a4f',
-  shadow: '0 2px 6px rgba(0,0,0,0.4)',
-  statusBar: 'light',
-};
-
-export function resolvePalette(pref: 'system' | 'light' | 'dark', systemDark: boolean): Palette {
-  if (pref === 'light') return LightPalette;
-  if (pref === 'dark') return DarkPalette;
-  return systemDark ? DarkPalette : LightPalette;
 }

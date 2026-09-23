@@ -193,7 +193,7 @@ export function severityFor(uas7: number): SeverityBand {  if (uas7 <= 0) {
       title: 'Mild',
       range: 'UAS7 7–15',
       description: 'Mild activity over the past week.',
-      color: '#ca8a04',
+      color: '#b45309',
     };
   }
   if (uas7 <= 27) {

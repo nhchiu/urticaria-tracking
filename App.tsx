@@ -8,8 +8,6 @@ import {
   Card,
   Chip,
   Dialog,
-  MD3DarkTheme,
-  MD3LightTheme,
   Menu,
   PaperProvider,
   Portal,
@@ -29,7 +27,7 @@ import {
   type ThemePref,
 } from './src/i18n';
 import { cleanNickname, loadEntries, loadSettings, saveEntries, saveSettings } from './src/storage';
-import { DarkPalette, LightPalette, type Palette } from './src/theme';
+import { BAND_TEXT, SCORE_TONES, darkTheme, lightTheme, type Palette, type Tone } from './src/theme';
 import { TrendChart } from './src/TrendChart';
 import {
   buildLast7,
@@ -46,35 +44,20 @@ import {
 
 const MAX_UAS7 = 42;
 
-// Severity colors for the 0-3 score buttons: 0 white, 1 pink, 2 red, 3 purple.
-const SCORE_COLORS = [
-  { bg: '#ffffff', fg: '#1f2937' },
-  { bg: '#f9a8d4', fg: '#1f2937' },
-  { bg: '#ef4444', fg: '#ffffff' },
-  { bg: '#8b5cf6', fg: '#ffffff' },
-];
-
-const lightTheme = {
-  ...MD3LightTheme,
-  colors: { ...MD3LightTheme.colors, primary: '#1d4ed8', secondary: '#7c3aed' },
-};
-const darkTheme = {
-  ...MD3DarkTheme,
-  colors: { ...MD3DarkTheme.colors, primary: '#93c5fd', secondary: '#c4b5fd' },
-};
-
 function ScoreCard({
   label,
   hint,
   options,
   value,
   onChange,
+  tones,
 }: {
   label: string;
   hint: string;
   options: ScoreOption[];
   value: Score0to3 | null;
   onChange: (v: Score0to3 | null) => void;
+  tones: Tone[];
 }) {
   const theme = useTheme();
   return (
@@ -87,7 +70,7 @@ function ScoreCard({
         <View style={styles.scoreRow}>
           {[0, 1, 2, 3].map((n) => {
             const active = value === n;
-            const c = SCORE_COLORS[n];
+            const c = tones[n];
             return (
               <Button
                 key={n}
@@ -194,15 +177,14 @@ export default function App() {
 
   const chartPalette: Palette = useMemo(
     () => ({
-      ...(isDark ? DarkPalette : LightPalette),
-      barFill: paperTheme.colors.primary,
-      barFillSelected: paperTheme.colors.secondary,
       card: paperTheme.colors.surface,
       text: paperTheme.colors.onSurface,
       faint: paperTheme.colors.onSurfaceVariant,
-      barEmptyBorder: paperTheme.colors.outline,
+      barFill: paperTheme.colors.primary,
+      barFillSelected: paperTheme.colors.secondary,
+      barEmptyBorder: paperTheme.colors.outlineVariant,
     }),
-    [isDark, paperTheme],
+    [paperTheme],
   );
 
   const last7 = useMemo(() => buildLast7(byDate, new Date(), lang), [byDate, lang]);
@@ -340,6 +322,7 @@ export default function App() {
         options={t.whealsOptions}
         value={wheals}
         onChange={setWheals}
+        tones={SCORE_TONES[isDark ? 'dark' : 'light']}
       />
       <ScoreCard
         label={t.itchLabel}
@@ -347,6 +330,7 @@ export default function App() {
         options={t.itchOptions}
         value={itch}
         onChange={setItch}
+        tones={SCORE_TONES[isDark ? 'dark' : 'light']}
       />
 
       <Card style={styles.card} mode="elevated">
@@ -412,7 +396,7 @@ export default function App() {
           <Text variant="displaySmall">
             {uas7.sum} <Text variant="titleMedium">/ 42</Text>
           </Text>
-          <Chip style={[styles.bandChip, { backgroundColor: band.color }]} textStyle={styles.bandChipText}>
+          <Chip style={[styles.bandChip, { backgroundColor: band.color }]} textStyle={[styles.bandChipText, { color: BAND_TEXT[band.key] }]}>
             {bandText.title}
           </Chip>
           <Text variant="bodySmall" style={styles.hint}>
@@ -484,7 +468,7 @@ export default function App() {
                 </View>
                 <Chip
                   style={[styles.bandChip, { backgroundColor: w.band.color }]}
-                  textStyle={styles.bandChipText}
+                  textStyle={[styles.bandChipText, { color: BAND_TEXT[w.band.key] }]}
                 >
                   {bandT.title}
                 </Chip>
@@ -739,16 +723,15 @@ const styles = StyleSheet.create({
   inner: { width: '100%', maxWidth: 720 },
   subtitleBar: { paddingHorizontal: 16, paddingTop: 8, fontSize: 15, lineHeight: 22 },
   tabWrap: { flex: 1 },
-  subtitle: { marginBottom: 8 },
-  sectionTitle: { marginTop: 20, marginBottom: 8, fontSize: 19 },
-  card: { marginBottom: 12 },
+  sectionTitle: { marginTop: 24, marginBottom: 10, fontSize: 19 },
+  card: { marginBottom: 14 },
   hint: { marginTop: 4, opacity: 0.7, fontSize: 14, lineHeight: 20 },
   dropdown: { marginTop: 8, alignSelf: 'stretch' },
   dropdownContent: { justifyContent: 'space-between' },
   scoreRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
   scoreBtn: { flex: 1, minWidth: 0, borderRadius: 12 },
   scoreContent: { height: 52, paddingHorizontal: 4 },
-  scoreLabel: { fontSize: 22, fontWeight: '800', marginHorizontal: 0 },
+  scoreLabel: { fontSize: 20, fontWeight: '700', marginHorizontal: 0 },
   legend: { marginTop: 12 },
   legendRow: { marginTop: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 },
   legendTitle: { fontWeight: '600', flexShrink: 0, fontSize: 15 },
@@ -759,7 +742,7 @@ const styles = StyleSheet.create({
   btnRow: { flexDirection: 'row', gap: 10, marginTop: 12 },
   btn: { flex: 1 },
   bandChip: { alignSelf: 'flex-start', marginTop: 4 },
-  bandChipText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  bandChipText: { fontWeight: '700', fontSize: 14 },
   progress: { marginTop: 8, height: 8, borderRadius: 4 },
   weekBlockGap: { marginTop: 20 },
   weekRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
