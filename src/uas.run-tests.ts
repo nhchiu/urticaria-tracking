@@ -1,5 +1,6 @@
 import {
   buildLast7,
+  buildLastN,
   calcPast4Weeks,
   calcUAS7,
   dailyTotal,
@@ -7,6 +8,7 @@ import {
   earliestEntryDate,
   hasNote,
   last7Keys,
+  lastNKeys,
   makeEntry,
   severityFor,
 } from './uas';
@@ -40,6 +42,12 @@ function main(): void {
   assert(keys[6] === '2026-09-05', `last key is today (${keys[6]})`);
   assert(keys[0] === '2026-08-30', `first key is 6 days ago (${keys[0]})`);
   assert(dateKey(new Date(2026, 0, 3)) === '2026-01-03', 'dateKey zero-pads');
+
+  const n28 = lastNKeys(new Date(2026, 8, 5), 28);
+  assert(n28.length === 28, 'lastNKeys returns 28 days');
+  assert(n28[0] === '2026-08-09' && n28[27] === '2026-09-05', 'lastNKeys spans 28 days');
+  assert(buildLastN({}, 28).length === 28, 'buildLastN returns 28 days');
+  assert(buildLastN({}, 7).length === 7, 'buildLastN supports 7 days');
 
   // Full week: 0..6 totals => sum 21 => moderate
   const full: Record<string, ReturnType<typeof makeEntry>> = {};

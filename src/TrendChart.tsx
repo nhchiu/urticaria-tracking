@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import Svg, { Circle, G, Line, Text as SvgText, TSpan } from 'react-native-svg';
 import type { Palette } from './theme';
-import { hasNote, type DayScore } from './uas';
+import { hasNote, shortDateLabel, type DayScore } from './uas';
 
 const MAX = 6;
 const VB_W = 360;
@@ -12,17 +12,14 @@ const PAD_R = 14;
 const PAD_T = 16;
 const PAD_B = 38;
 
-function x(i: number, w: number): number {
-  return PAD_L + (i * (w - PAD_L - PAD_R)) / 6;
-}
-
 function y(v: number, h: number): number {
   return PAD_T + (1 - v / MAX) * (h - PAD_T - PAD_B);
 }
 
 /**
- * 7-day UAS line chart. Segments connect consecutive recorded days;
+ * N-day UAS line chart. Segments connect consecutive recorded days;
  * gaps stay broken and missing days render as hollow dashed markers.
+ * Dense ranges (e.g. 28 days) hide value labels and thin out x-axis labels.
  */
 export function TrendChart({
   days,
@@ -38,7 +35,10 @@ export function TrendChart({
   const [width, setWidth] = useState(VB_W);
   const w = Math.max(280, width);
   const h = (VB_H * w) / VB_W;
-  const sx = (i: number) => x(i, w);
+  const n = days.length;
+  const intervals = Math.max(1, n - 1);
+  const dense = n > 10;
+  const sx = (i: number) => PAD_L + (i * (w - PAD_L - PAD_R)) / intervals;
   const sy = (v: number) => y(v, h);
 
   return (
@@ -117,7 +117,7 @@ export function TrendChart({
                     textAnchor="middle"
                     fill={palette.text}
                   >
-                    {d.total}
+                    {!dense && d.total}
                   </SvgText>
                   {hasNote(d.entry) && (
                     <SvgText
@@ -146,8 +146,31 @@ export function TrendChart({
             </G>
           );
         })}
-        {/* x labels: two lines (date / weekday) so they fit narrow screens */}
+        {/* x labels: two lines (date / weekday) for short ranges, single MM/DD for dense ones */}
         {days.map((d, i) => {
+          const focused = d.date === selectedDate;
+          const step = Math.max(1, Math.ceil(n / 7));
+          const show =
+            !dense || focused || i % step === 0 || i === n - 1;
+          if (!show) return null;
+          if (dense) {
+            return (
+              <SvgText
+                key={`x-${d.date}`}
+                x={sx(i)}
+                y={h - 20}
+                fontSize={10}
+                textAnchor="middle"
+                fill={focused ? palette.text : palette.faint}
+                fontWeight={focused ? '700' : '400'}
+                onPress={() => onSelectDate?.(d.date)}
+              >
+                <TSpan x={sx(i)} dy="0">
+                  {shortDateLabel(d.date)}
+                </TSpan>
+              </SvgText>
+            );
+          }
           const sp = d.label.lastIndexOf(' ');
           const datePart = sp >= 0 ? d.label.slice(0, sp) : d.label;
           const wdPart = sp >= 0 ? d.label.slice(sp + 1) : '';
@@ -158,8 +181,8 @@ export function TrendChart({
               y={h - 20}
               fontSize={11}
               textAnchor="middle"
-              fill={d.date === selectedDate ? palette.text : palette.faint}
-              fontWeight={d.date === selectedDate ? '700' : '400'}
+              fill={focused ? palette.text : palette.faint}
+              fontWeight={focused ? '700' : '400'}
               onPress={() => onSelectDate?.(d.date)}
             >
               <TSpan x={sx(i)} dy="0">

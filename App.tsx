@@ -31,6 +31,7 @@ import { BAND_TEXT, SCORE_TONES, darkTheme, lightTheme, type Palette, type Tone 
 import { TrendChart } from './src/TrendChart';
 import {
   buildLast7,
+  buildLastN,
   calcPast4Weeks,
   calcUAS7,
   dateKey,
@@ -131,6 +132,8 @@ export default function App() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [langMenuVisible, setLangMenuVisible] = useState(false);
   const [themeMenuVisible, setThemeMenuVisible] = useState(false);
+  const [trendDays, setTrendDays] = useState(7);
+  const [trendMenuVisible, setTrendMenuVisible] = useState(false);
 
   useEffect(() => {
     Promise.all([loadEntries(), loadSettings()]).then(([entries, settings]) => {
@@ -190,6 +193,10 @@ export default function App() {
   const last7 = useMemo(() => buildLast7(byDate, new Date(), lang), [byDate, lang]);
   const uas7 = useMemo(() => calcUAS7(last7), [last7]);
   const past4Weeks = useMemo(() => calcPast4Weeks(byDate, new Date(), lang), [byDate, lang]);
+  const trendSeries = useMemo(
+    () => buildLastN(byDate, trendDays, new Date(), lang),
+    [byDate, trendDays, lang],
+  );
   const firstDate = useMemo(() => earliestEntryDate(byDate), [byDate]);
   const todayTotal = (wheals ?? 0) + (itch ?? 0);
   const sealed = wheals !== null && itch !== null;
@@ -413,13 +420,45 @@ export default function App() {
 
   const trendSection = (
     <>
-      <Text variant="titleMedium" style={styles.sectionTitle}>
-        {t.sectionTrend}
-      </Text>
+      <Menu
+        visible={trendMenuVisible}
+        onDismiss={() => setTrendMenuVisible(false)}
+        anchor={
+          <Button
+            mode="text"
+            compact
+            icon="chevron-down"
+            textColor={paperTheme.colors.onSurface}
+            onPress={() => setTrendMenuVisible(true)}
+            style={styles.trendTitle}
+            contentStyle={styles.trendAnchorContent}
+            labelStyle={styles.trendAnchorLabel}
+          >
+            {trendDays === 7 ? t.trend7 : t.trend28}
+          </Button>
+        }
+      >
+        <Menu.Item
+          leadingIcon="chart-line"
+          title={t.trend7}
+          onPress={() => {
+            setTrendDays(7);
+            setTrendMenuVisible(false);
+          }}
+        />
+        <Menu.Item
+          leadingIcon="chart-multiline"
+          title={t.trend28}
+          onPress={() => {
+            setTrendDays(28);
+            setTrendMenuVisible(false);
+          }}
+        />
+      </Menu>
       <Card style={styles.card} mode="elevated">
         <Card.Content>
           <TrendChart
-            days={last7}
+            days={trendSeries}
             palette={chartPalette}
             selectedDate={selectedDate}
             onSelectDate={(date) => {
@@ -724,6 +763,9 @@ const styles = StyleSheet.create({
   subtitleBar: { paddingHorizontal: 16, paddingTop: 8, fontSize: 15, lineHeight: 22 },
   tabWrap: { flex: 1 },
   sectionTitle: { marginTop: 24, marginBottom: 10, fontSize: 19 },
+  trendTitle: { marginTop: 20, marginBottom: 6, alignSelf: 'flex-start' },
+  trendAnchorContent: { flexDirection: 'row-reverse' },
+  trendAnchorLabel: { fontSize: 19, fontWeight: '500', lineHeight: 24 },
   card: { marginBottom: 14 },
   hint: { marginTop: 4, opacity: 0.7, fontSize: 14, lineHeight: 20 },
   dropdown: { marginTop: 8, alignSelf: 'stretch' },

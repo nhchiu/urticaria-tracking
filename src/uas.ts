@@ -109,15 +109,20 @@ export function parseDateKey(key: string): Date {
   return new Date(y, (m ?? 1) - 1, d ?? 1);
 }
 
-/** 7 keys ending today (or ending at `ref`), oldest first. */
-export function last7Keys(ref: Date = new Date()): string[] {
+/** n keys ending today (or ending at `ref`), oldest first. */
+export function lastNKeys(ref: Date, n: number): string[] {
   const out: string[] = [];
-  for (let i = 6; i >= 0; i--) {
+  for (let i = n - 1; i >= 0; i--) {
     const d = new Date(ref);
     d.setDate(d.getDate() - i);
     out.push(dateKey(d));
   }
   return out;
+}
+
+/** 7 keys ending today (or ending at `ref`), oldest first. */
+export function last7Keys(ref: Date = new Date()): string[] {
+  return lastNKeys(ref, 7);
 }
 
 const WEEKDAYS_EN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -134,18 +139,36 @@ export function shortLabel(dateStr: string, lang: LabelLang = 'en'): string {
   return `${mm}/${dd} ${wd}`;
 }
 
+/** Short MM/DD chart label without weekday, e.g. "09/18". */
+export function shortDateLabel(dateStr: string): string {
+  const d = parseDateKey(dateStr);
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${mm}/${dd}`;
+}
+
+/** Join stored entries with the last-n calendar (n days), oldest first. Missing days => null. */
+export function buildLastN(
+  byDate: Record<string, DailyEntry>,
+  n: number,
+  ref: Date = new Date(),
+  lang: LabelLang = 'en',
+): DayScore[] {
+  return lastNKeys(ref, n).map((date) => ({
+    date,
+    label: shortLabel(date, lang),
+    entry: byDate[date] ?? null,
+    total: byDate[date] ? byDate[date].total : null,
+  }));
+}
+
 /** Join stored entries with the last-7 calendar, oldest first. Missing days => null. */
 export function buildLast7(
   byDate: Record<string, DailyEntry>,
   ref: Date = new Date(),
   lang: LabelLang = 'en',
 ): DayScore[] {
-  return last7Keys(ref).map((date) => ({
-    date,
-    label: shortLabel(date, lang),
-    entry: byDate[date] ?? null,
-    total: byDate[date] ? byDate[date].total : null,
-  }));
+  return buildLastN(byDate, 7, ref, lang);
 }
 
 /** Earliest stored entry date (YYYY-MM-DD), or null when nothing is recorded. */

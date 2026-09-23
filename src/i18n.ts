@@ -76,7 +76,8 @@ export interface Strings {
   pageTitle: (nickname: string) => string;
   sectionSummary: string;
   recordedDays: (n: number) => string;
-  sectionTrend: string;
+  trend7: string;
+  trend28: string;
   sectionWeeks: string;
   thisWeek: string;
   chartHint: string;
@@ -142,7 +143,8 @@ const en: Strings = {
   pageTitle: (nickname) => (nickname ? `UAS7 Diary - ${nickname}` : 'UAS7 Diary'),
   sectionSummary: 'UAS7 summary (last 7 days)',
   recordedDays: (n) => `${n} of 7 days recorded`,
-  sectionTrend: '7-day trend',
+  trend7: '7-day trend',
+  trend28: '28-day trend',
   sectionWeeks: 'Past 4 weeks',
   thisWeek: 'This week',
   chartHint: 'Line = daily UAS (0–6). Hollow markers = missing days.',
@@ -215,7 +217,8 @@ const zhHant: Strings = {
   pageTitle: (nickname) => (nickname ? `蕁麻疹日記 - ${nickname}` : '蕁麻疹日記'),
   sectionSummary: 'UAS7 總結（過去 7 天）',
   recordedDays: (n) => `已紀錄 ${n}／7 天`,
-  sectionTrend: '7 天趨勢',
+  trend7: '7 天趨勢',
+  trend28: '28 天趨勢',
   sectionWeeks: '過去四週每週累積',
   thisWeek: '本週',
   chartHint: '折線＝每日 UAS（0–6）。空心點＝缺漏日期。',
