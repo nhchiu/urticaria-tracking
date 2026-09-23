@@ -58,8 +58,10 @@ export interface Strings {
   noteLabel: string;
   notePlaceholder: string;
   dailyUas: (date: string, total: number) => string;
+  dailyUasEmpty: (date: string) => string;
   saveHintUpdate: string;
   saveHintRecord: string;
+  scoreRequired: string;
   save: string;
   delete: string;
   deleteTitle: string;
@@ -122,8 +124,10 @@ const en: Strings = {
   noteLabel: 'Note (optional)',
   notePlaceholder: 'Triggers, meds, sleep, extra symptoms…',
   dailyUas: (date, total) => `Daily UAS for ${date}: ${total} / 6`,
+  dailyUasEmpty: (date) => `Daily UAS for ${date}: not recorded / 6`,
   saveHintUpdate: 'tap Save to update.',
   saveHintRecord: 'tap Save to record.',
+  scoreRequired: 'Select both scores to save.',
   save: 'Save entry',
   delete: 'Delete',
   deleteTitle: 'Delete entry?',
@@ -193,8 +197,10 @@ const zhHant: Strings = {
   noteLabel: '備註（選填）',
   notePlaceholder: '誘因、用藥、睡眠、其他症狀……',
   dailyUas: (date, total) => `${date} 每日 UAS：${total} / 6`,
+  dailyUasEmpty: (date) => `${date} 每日 UAS：未紀錄 / 6`,
   saveHintUpdate: '點「儲存」以更新。',
   saveHintRecord: '點「儲存」以紀錄。',
+  scoreRequired: '請先選取兩個分數。',
   save: '儲存紀錄',
   delete: '刪除',
   deleteTitle: '刪除紀錄？',

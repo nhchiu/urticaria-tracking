@@ -73,8 +73,8 @@ function ScoreCard({
   label: string;
   hint: string;
   options: ScoreOption[];
-  value: Score0to3;
-  onChange: (v: Score0to3) => void;
+  value: Score0to3 | null;
+  onChange: (v: Score0to3 | null) => void;
 }) {
   const theme = useTheme();
   return (
@@ -96,7 +96,7 @@ function ScoreCard({
                 buttonColor={c.bg}
                 textColor={c.fg}
                 accessibilityState={{ selected: active }}
-                onPress={() => onChange(n as Score0to3)}
+                onPress={() => onChange(value === n ? null : (n as Score0to3))}
                 style={[
                   styles.scoreBtn,
                   {
@@ -133,8 +133,8 @@ export default function App() {
   const systemScheme = useColorScheme();
   const [byDate, setByDate] = useState<Record<string, DailyEntry>>({});
   const [selectedDate, setSelectedDate] = useState<string>(() => dateKey(new Date()));
-  const [wheals, setWheals] = useState<Score0to3>(0);
-  const [itch, setItch] = useState<Score0to3>(0);
+  const [wheals, setWheals] = useState<Score0to3 | null>(null);
+  const [itch, setItch] = useState<Score0to3 | null>(null);
   const [note, setNote] = useState('');
   const [loaded, setLoaded] = useState(false);
   const [langPref, setLangPref] = useState<LangPref>('system');
@@ -170,8 +170,8 @@ export default function App() {
       setItch(existing.itch);
       setNote(existing.note ?? '');
     } else {
-      setWheals(0);
-      setItch(0);
+      setWheals(null);
+      setItch(null);
       setNote('');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -209,7 +209,8 @@ export default function App() {
   const uas7 = useMemo(() => calcUAS7(last7), [last7]);
   const past4Weeks = useMemo(() => calcPast4Weeks(byDate, new Date(), lang), [byDate, lang]);
   const firstDate = useMemo(() => earliestEntryDate(byDate), [byDate]);
-  const todayTotal = wheals + itch;
+  const todayTotal = (wheals ?? 0) + (itch ?? 0);
+  const sealed = wheals !== null && itch !== null;
 
   // Quick date strip: today + previous 13 days for picking which day to record.
   const pickableDates = useMemo(() => {
@@ -267,6 +268,7 @@ export default function App() {
   }
 
   async function handleSave() {
+    if (wheals === null || itch === null) return;
     const entry = makeEntry(selectedDate, wheals, itch, note);
     const next = { ...byDate, [selectedDate]: entry };
     await persist(next);
@@ -276,8 +278,8 @@ export default function App() {
     const next = { ...byDate };
     delete next[selectedDate];
     await persist(next);
-    setWheals(0);
-    setItch(0);
+    setWheals(null);
+    setItch(null);
     setNote('');
   }
 
@@ -365,12 +367,19 @@ export default function App() {
 
       <Card style={styles.card} mode="elevated">
         <Card.Content>
-          <Text variant="titleMedium">{t.dailyUas(selectedDate, todayTotal)}</Text>
+          <Text variant="titleMedium">
+            {sealed ? t.dailyUas(selectedDate, todayTotal) : t.dailyUasEmpty(selectedDate)}
+          </Text>
           <Text variant="bodySmall" style={styles.hint}>
-            {wheals} + {itch} — {byDate[selectedDate] ? t.saveHintUpdate : t.saveHintRecord}
+            {`${wheals ?? t.missing} + ${itch ?? t.missing}`} —{' '}
+            {sealed
+              ? byDate[selectedDate]
+                ? t.saveHintUpdate
+                : t.saveHintRecord
+              : t.scoreRequired}
           </Text>
           <View style={styles.btnRow}>
-            <Button mode="contained" icon="content-save" onPress={handleSave} style={styles.btn}>
+            <Button mode="contained" icon="content-save" onPress={handleSave} disabled={!sealed} style={styles.btn}>
               {t.save}
             </Button>
             {byDate[selectedDate] && (
