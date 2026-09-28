@@ -91,13 +91,13 @@ export interface Tone {
  */
 export const SCORE_TONES: Record<'light' | 'dark', Tone[]> = {
   light: [
-    { bg: '#eceff3', fg: '#1a1d21' },
+    { bg: '#d9dee4', fg: '#1a1d21' },
     { bg: '#f9a8d4', fg: '#3b0a2c' },
     { bg: '#ef4444', fg: '#ffffff' },
     { bg: '#8b5cf6', fg: '#ffffff' },
   ],
   dark: [
-    { bg: '#262a30', fg: '#d4d8de' },
+    { bg: '#333844', fg: '#d4d8de' },
     { bg: '#a4496f', fg: '#ffffff' },
     { bg: '#ef4444', fg: '#ffffff' },
     { bg: '#8b5cf6', fg: '#ffffff' },
