@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo, useState } from 'react';
-import { PanResponder, ScrollView, StyleSheet, View, useColorScheme, Pressable } from 'react-native';
+import { PanResponder, ScrollView, StyleSheet, View, useColorScheme } from 'react-native';
 import {
   Appbar,
   BottomNavigation,
@@ -17,6 +17,7 @@ import {
   useTheme,
 } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { DateWheelPicker } from './src/DateWheelPicker';
 import {
   getStrings,
   MAX_NICKNAME_LENGTH,
@@ -36,9 +37,7 @@ import {
   calcUAS7,
   dateKey,
   earliestEntryDate,
-  hasNote,
   makeEntry,
-  shortLabel,
   type DailyEntry,
   type Score0to3,
 } from './src/uas';
@@ -197,21 +196,10 @@ export default function App() {
     () => buildLastN(byDate, trendDays, new Date(), lang),
     [byDate, trendDays, lang],
   );
+  const recordedKeys = useMemo(() => new Set(Object.keys(byDate)), [byDate]);
   const firstDate = useMemo(() => earliestEntryDate(byDate), [byDate]);
   const todayTotal = (wheals ?? 0) + (itch ?? 0);
   const sealed = wheals !== null && itch !== null;
-
-  // Quick date strip: today + previous 13 days for picking which day to record.
-  const pickableDates = useMemo(() => {
-    const out: string[] = [];
-    const today = new Date();
-    for (let i = 0; i < 14; i++) {
-      const d = new Date(today);
-      d.setDate(d.getDate() - i);
-      out.push(dateKey(d));
-    }
-    return out;
-  }, []);
 
   async function persist(next: Record<string, DailyEntry>) {
     setByDate(next);
@@ -285,38 +273,23 @@ export default function App() {
       <Card style={styles.card} mode="elevated">
         <Card.Content>
           <Text variant="titleSmall">{t.whichDay}</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.dateStrip}>
-                  {pickableDates.map((d) => {
-                    const active = d === selectedDate;
-                    const isToday = d === dateKey(new Date());
-                    const hasScore = !!byDate[d];
-                    const marked = hasNote(byDate[d]);
-                    return (
-                      <Chip
-                        key={d}
-                        selected={active}
-                        showSelectedCheck={false}
-                        icon={marked ? 'star' : undefined}
-                        onPress={() => setSelectedDate(d)}
-                        style={[
-                          styles.dateChip,
-                          hasScore && !active && { backgroundColor: paperTheme.colors.tertiaryContainer },
-                          active && { backgroundColor: paperTheme.colors.primary },
-                        ]}
-                        textStyle={
-                          active
-                            ? { color: paperTheme.colors.onPrimary }
-                            : hasScore
-                              ? { color: paperTheme.colors.onTertiaryContainer }
-                              : undefined
-                        }
-                      >
-                  {isToday ? t.today : shortLabel(d, lang)}
-                  {` · ${byDate[d] ? `UAS ${byDate[d].total}` : t.missing}`}
-                </Chip>
-              );
-            })}
-          </ScrollView>
+          <DateWheelPicker
+            value={selectedDate}
+            onChange={setSelectedDate}
+            maxDate={dateKey(new Date())}
+            locale={lang}
+            recorded={recordedKeys}
+          />
+          <View style={styles.wheelActions}>
+            <Button
+              mode="outlined"
+              compact
+              icon="calendar-today"
+              onPress={() => setSelectedDate(dateKey(new Date()))}
+            >
+              {t.today}
+            </Button>
+          </View>
           <Text variant="bodySmall" style={styles.hint}>
             {t.recordingFor} {selectedDate}
           </Text>
@@ -780,8 +753,7 @@ const styles = StyleSheet.create({
   legendRow: { marginTop: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 },
   legendTitle: { fontWeight: '600', flexShrink: 0, fontSize: 15 },
   legendDetail: { fontSize: 15, flex: 1, textAlign: 'right', opacity: 0.7 },
-  dateStrip: { marginTop: 10 },
-  dateChip: { marginRight: 8 },
+  wheelActions: { flexDirection: 'row', justifyContent: 'center', marginTop: 10 },
   noteInput: { marginTop: 8 },
   btnRow: { flexDirection: 'row', gap: 10, marginTop: 12 },
   btn: { flex: 1 },
