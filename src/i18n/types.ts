@@ -28,6 +28,13 @@ export interface ScoreOption {
  * Every string used by the app. Add fields here when a new UI string is needed;
  * every language module must then provide it (the type enforces this).
  */
+export interface FaqItem {
+  question: string;
+  answer: string;
+  /** Optional tappable link shown below the answer. */
+  url?: string;
+}
+
 export interface Strings {
   appName: string;
   subtitle: string;
@@ -73,7 +80,10 @@ export interface Strings {
   missing: string;
   settings: string;
   done: string;
-  tabs: { entry: string; summary: string; trend: string; weeks: string };
+  tabs: { entry: string; summary: string; trend: string; weeks: string; help: string };
+  sectionHelp: string;
+  openLink: string;
+  faq: FaqItem[];
   language: string;
   theme: string;
   optSystem: string;

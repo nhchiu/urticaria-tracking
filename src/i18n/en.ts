@@ -55,7 +55,52 @@ export const en: Strings = {
   missing: '–',
   settings: 'Settings',
   done: 'Done',
-  tabs: { entry: 'Entry', summary: 'Summary', trend: 'Trend', weeks: 'Weeks' },
+  tabs: { entry: 'Entry', summary: 'Summary', trend: 'Trend', weeks: 'Weeks', help: 'Help' },
+  sectionHelp: 'Help & FAQ',
+  openLink: 'Open link',
+  faq: [
+    {
+      question: 'What is this app for?',
+      answer:
+        'UAS7 Diary is a daily diary for tracking urticaria (hives): each day you score wheals and itch (0–3 each). It totals them into a daily score (0–6) and a weekly UAS7 (0–42), with a trend chart and weekly summaries so you and your clinician can see changes at a glance.',
+    },
+    {
+      question: 'Do I need to download it from an app store?',
+      answer:
+        'No. It is essentially a webpage that you can install to your phone’s home screen (see the install questions below). Once installed, it opens just like a regular app.',
+    },
+    {
+      question: 'Does it need the internet to work?',
+      answer:
+        'You need to be online the first time you open or install it. After installation it keeps an offline cache, so you can open it and record entries without a connection; it updates itself automatically when you are back online.',
+    },
+    {
+      question: 'Where is my data stored? Is it uploaded anywhere?',
+      answer:
+        'Only on your own phone or device, in the browser’s storage. Nothing is uploaded to any server, and there is no account or cloud sync. Note: entries will not move to a new phone automatically, so do not record in an incognito or private window (it keeps no data), and clearing browser data or removing the app deletes your entries.',
+    },
+    {
+      question: 'Does this app use cookies or track me?',
+      answer:
+        'Not at all — no cookies, no trackers, no ads, no analytics. Your data lives in the browser’s local storage on your own device, like a notebook that never leaves your phone, and the offline cache uses cache storage. Neither has anything to do with cookies.',
+    },
+    {
+      question: 'How do I install it on Android?',
+      answer:
+        '1. Open the site below in Chrome. 2. Tap the three-dot (⋮) menu at the top right. 3. Tap “Install” or “Add to Home screen” (wording varies by version). 4. Confirm. Some phones also show an install prompt automatically on the first visit.',
+      url: 'https://nhchiu.github.io/urticaria-tracking/',
+    },
+    {
+      question: 'How do I install it on iPhone?',
+      answer:
+        '1. Open the site below in Safari. 2. Tap the Share button (a square with an upward arrow) at the bottom. 3. Scroll down and tap “Add to Home Screen”. 4. Confirm the name and tap “Add”. It will then open full-screen from the home-screen icon.',
+      url: 'https://nhchiu.github.io/urticaria-tracking/',
+    },
+    {
+      question: 'Who can I ask if I have questions?',
+      answer: 'Please ask your clinician.',
+    },
+  ],
   language: 'Language',
   theme: 'Theme',
   optSystem: 'System',

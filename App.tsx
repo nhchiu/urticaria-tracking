@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo, useState } from 'react';
-import { PanResponder, ScrollView, StyleSheet, View, useColorScheme } from 'react-native';
+import { Linking, PanResponder, ScrollView, StyleSheet, View, useColorScheme } from 'react-native';
 import {
   Appbar,
   BottomNavigation,
@@ -8,6 +8,7 @@ import {
   Card,
   Chip,
   Dialog,
+  List,
   Menu,
   PaperProvider,
   Portal,
@@ -501,6 +502,40 @@ export default function App() {
     </>
   );
 
+  const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
+
+  const helpSection = (
+    <>
+      <Text variant="titleMedium" style={styles.sectionTitle}>
+        {t.sectionHelp}
+      </Text>
+      <Card style={styles.card} mode="elevated">
+        {t.faq.map((item, i) => (
+          <List.Accordion
+            key={i}
+            title={item.question}
+            titleNumberOfLines={2}
+            expanded={expandedFaq === i}
+            onPress={() => setExpandedFaq(expandedFaq === i ? null : i)}
+          >
+            <View style={styles.faqBody}>
+              <Text variant="bodyMedium">{item.answer}</Text>
+              {item.url ? (
+                <Text
+                  variant="bodyMedium"
+                  style={[styles.faqLink, { color: paperTheme.colors.primary }]}
+                  onPress={() => item.url && Linking.openURL(item.url)}
+                >
+                  {t.openLink}: {item.url}
+                </Text>
+              ) : null}
+            </View>
+          </List.Accordion>
+        ))}
+      </Card>
+    </>
+  );
+
   const [tabIndex, setTabIndex] = useState(0);
   const routes = useMemo(
     () => [
@@ -508,6 +543,7 @@ export default function App() {
       { key: 'summary', title: t.tabs.summary, focusedIcon: 'gauge' },
       { key: 'trend', title: t.tabs.trend, focusedIcon: 'chart-line' },
       { key: 'weeks', title: t.tabs.weeks, focusedIcon: 'calendar-week' },
+      { key: 'help', title: t.tabs.help, focusedIcon: 'help-circle' },
     ],
     [t],
   );
@@ -540,6 +576,8 @@ export default function App() {
           return trendSection;
         case 'weeks':
           return weeksSection;
+        case 'help':
+          return helpSection;
         case 'entry':
         default:
           return entrySection;
@@ -764,6 +802,8 @@ const styles = StyleSheet.create({
   weekRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   weekLabel: { flex: 1 },
   weekSum: { alignItems: 'flex-end', marginLeft: 12 },
+  faqBody: { paddingHorizontal: 16, paddingBottom: 16 },
+  faqLink: { marginTop: 8, textDecorationLine: 'underline' },
   dialogGap: { marginTop: 16 },
   copyright: { marginTop: 16, opacity: 0.6, textAlign: 'center', fontSize: 13 },
   footer: { marginTop: 16, opacity: 0.6, lineHeight: 20, fontSize: 13 },
