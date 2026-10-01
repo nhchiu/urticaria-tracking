@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   itemText: { fontSize: 17, fontWeight: '600' },
-  cell: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  cell: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
   cellText: { fontSize: 17, fontWeight: '600', includeFontPadding: false },
-  dot: { width: 5, height: 5, borderRadius: 2.5, marginTop: 3, backgroundColor: 'transparent' },
+  dot: { width: 5, height: 5, borderRadius: 2.5, marginLeft: 6, backgroundColor: 'transparent' },
 });
