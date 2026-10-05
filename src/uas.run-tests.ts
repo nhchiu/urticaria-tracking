@@ -1,8 +1,9 @@
 import {
   buildLast7,
   buildLastN,
-  calcPast4Weeks,
+  calcAllWeeks,
   calcUAS7,
+  calcWeeks,
   dailyTotal,
   dateKey,
   earliestEntryDate,
@@ -89,16 +90,26 @@ function main(): void {
     const w = Math.min(3, tot) as 0 | 1 | 2 | 3;
     four[k] = makeEntry(k, w, (tot - w) as 0 | 1 | 2 | 3);
   }
-  const weeks = calcPast4Weeks(four, ref);
-  assert(weeks.length === 4, 'past4weeks returns 4 blocks');
+  const weeks = calcWeeks(four, ref, 'en', 4);
+  assert(weeks.length === 4, 'calcWeeks returns 4 blocks');
   assert(weeks[0].end === '2026-09-05' && weeks[0].start === '2026-08-30', `week0 window (${weeks[0].start}..${weeks[0].end})`);
   assert(weeks[3].start === '2026-08-09' && weeks[3].end === '2026-08-15', `week3 window (${weeks[3].start}..${weeks[3].end})`);
   assert(weeks.every((w) => w.complete && w.recordedDays === 7), 'full 28 days => all weeks complete');
   const weekSums = weeks.map((w) => w.sum);
   assert(weekSums[0] === 21, `week0 sums to 21 (${weekSums[0]})`);
   assert(weeks[0].band.key === 'moderate', 'week0 band moderate');
-  const sparse = calcPast4Weeks({}, ref);
+  const sparse = calcWeeks({}, ref, 'en', 4);
   assert(sparse.every((w) => w.sum === 0 && !w.complete), 'empty history => zero incomplete weeks');
+
+  // All weeks since first record: 28 consecutive days => 4 blocks, newest first.
+  const all = calcAllWeeks(four, ref);
+  assert(all.length === 4, `calcAllWeeks covers 28 days in 4 blocks (${all.length})`);
+  assert(all[0].end === '2026-09-05' && all[3].start === '2026-08-09', 'calcAllWeeks spans first to current week');
+  assert(calcAllWeeks({}, ref).length === 0, 'empty history => no week blocks');
+  const recent = calcAllWeeks({ '2026-09-05': makeEntry('2026-09-05', 1, 1) }, ref);
+  assert(recent.length === 1 && recent[0].sum === 2, 'single recent entry => one current-week block');
+  const old = calcAllWeeks({ '2026-08-20': makeEntry('2026-08-20', 3, 3) }, ref);
+  assert(old.length === 3 && old[2].sum === 6, `10-day-old entry => 3 blocks (${old.length})`);
 
   assert(earliestEntryDate({}) === null, 'no entries => null first date');
   assert(earliestEntryDate(full) === '2026-08-30', `earliest of full week (${earliestEntryDate(full)})`);

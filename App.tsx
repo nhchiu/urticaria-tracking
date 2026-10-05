@@ -34,7 +34,7 @@ import { TrendChart } from './src/TrendChart';
 import {
   buildLast7,
   buildLastN,
-  calcPast4Weeks,
+  calcAllWeeks,
   calcUAS7,
   dateKey,
   earliestEntryDate,
@@ -192,7 +192,7 @@ export default function App() {
 
   const last7 = useMemo(() => buildLast7(byDate, new Date(), lang), [byDate, lang]);
   const uas7 = useMemo(() => calcUAS7(last7), [last7]);
-  const past4Weeks = useMemo(() => calcPast4Weeks(byDate, new Date(), lang), [byDate, lang]);
+  const allWeeks = useMemo(() => calcAllWeeks(byDate, new Date(), lang), [byDate, lang]);
   const trendSeries = useMemo(
     () => buildLastN(byDate, trendDays, new Date(), lang),
     [byDate, trendDays, lang],
@@ -458,41 +458,45 @@ export default function App() {
       </Text>
       <Card style={styles.card} mode="elevated">
         <Card.Content>
-          {past4Weeks.map((w, i) => {
-            const bandT = t.bands[w.band.key];
-            return (
-              <View key={w.start} style={i > 0 ? styles.weekBlockGap : undefined}>
-                <View style={styles.weekRow}>
-                  <View style={styles.weekLabel}>
-                    <Text variant="titleSmall">
-                      {w.label}
-                      {i === 0 ? ` · ${t.thisWeek}` : ''}
-                    </Text>
-                    <Text variant="bodySmall" style={styles.hint}>
-                      {t.recordedDays(w.recordedDays)}
-                    </Text>
+          {allWeeks.length === 0 ? (
+            <Text variant="bodyMedium">{t.noRecordsYet}</Text>
+          ) : (
+            allWeeks.map((w, i) => {
+              const bandT = t.bands[w.band.key];
+              return (
+                <View key={w.start} style={i > 0 ? styles.weekBlockGap : undefined}>
+                  <View style={styles.weekRow}>
+                    <View style={styles.weekLabel}>
+                      <Text variant="titleSmall">
+                        {w.label}
+                        {i === 0 ? ` · ${t.thisWeek}` : ''}
+                      </Text>
+                      <Text variant="bodySmall" style={styles.hint}>
+                        {t.recordedDays(w.recordedDays)}
+                      </Text>
+                    </View>
+                    <View style={styles.weekSum}>
+                      <Text variant="headlineSmall">{w.sum}</Text>
+                      <Text variant="bodySmall" style={styles.hint}>
+                        / 42
+                      </Text>
+                    </View>
                   </View>
-                  <View style={styles.weekSum}>
-                    <Text variant="headlineSmall">{w.sum}</Text>
-                    <Text variant="bodySmall" style={styles.hint}>
-                      / 42
-                    </Text>
-                  </View>
+                  <Chip
+                    style={[styles.bandChip, { backgroundColor: w.band.color }]}
+                    textStyle={[styles.bandChipText, { color: BAND_TEXT[w.band.key] }]}
+                  >
+                    {bandT.title}
+                  </Chip>
+                  <ProgressBar
+                    progress={Math.min(1, w.sum / MAX_UAS7)}
+                    color={w.band.color}
+                    style={styles.progress}
+                  />
                 </View>
-                <Chip
-                  style={[styles.bandChip, { backgroundColor: w.band.color }]}
-                  textStyle={[styles.bandChipText, { color: BAND_TEXT[w.band.key] }]}
-                >
-                  {bandT.title}
-                </Chip>
-                <ProgressBar
-                  progress={Math.min(1, w.sum / MAX_UAS7)}
-                  color={w.band.color}
-                  style={styles.progress}
-                />
-              </View>
-            );
-          })}
+              );
+            })
+          )}
         </Card.Content>
       </Card>
 

@@ -251,17 +251,18 @@ export interface WeeklySum {
 }
 
 /**
- * Accumulated UAS7 for each of the past 4 weeks, newest first.
- * Week 0 = last 7 days (same window as the UAS7 summary),
- * week 1 = days 8–14 ago, and so on.
+ * Accumulated UAS7 for `count` consecutive 7-day blocks, newest first.
+ * Block 0 = last 7 days (same window as the UAS7 summary),
+ * block 1 = days 8–14 ago, and so on.
  */
-export function calcPast4Weeks(
+export function calcWeeks(
   byDate: Record<string, DailyEntry>,
   ref: Date = new Date(),
   lang: LabelLang = 'en',
+  count: number = 4,
 ): WeeklySum[] {
   const out: WeeklySum[] = [];
-  for (let w = 0; w < 4; w++) {
+  for (let w = 0; w < count; w++) {
     const end = new Date(ref);
     end.setDate(end.getDate() - w * 7);
     const start = new Date(ref);
@@ -290,4 +291,24 @@ export function calcPast4Weeks(
     });
   }
   return out;
+}
+
+/**
+ * One 7-day block per week from the earliest recorded entry through the
+ * current week, newest first. Empty history => [].
+ */
+export function calcAllWeeks(
+  byDate: Record<string, DailyEntry>,
+  ref: Date = new Date(),
+  lang: LabelLang = 'en',
+): WeeklySum[] {
+  const first = earliestEntryDate(byDate);
+  if (!first) return [];
+  const start0 = new Date(ref);
+  start0.setDate(start0.getDate() - 6);
+  const dayMs = 24 * 60 * 60 * 1000;
+  const start0Day = new Date(start0.getFullYear(), start0.getMonth(), start0.getDate());
+  const daysBack = Math.round((start0Day.getTime() - parseDateKey(first).getTime()) / dayMs);
+  const count = daysBack <= 0 ? 1 : Math.ceil(daysBack / 7) + 1;
+  return calcWeeks(byDate, ref, lang, count);
 }
