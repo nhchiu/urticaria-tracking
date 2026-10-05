@@ -10,8 +10,8 @@ import { Platform, StyleSheet, Text, View, type StyleProp, type TextStyle } from
 import { useTheme } from 'react-native-paper';
 import { dateKey } from './uas';
 
-const ITEM_HEIGHT = 40;
-const VISIBLE_ITEM_COUNT = 3;
+const ITEM_HEIGHT = 30;
+const VISIBLE_ITEM_COUNT = 5;
 
 const DATE_WIDTH = 76;
 const MONTH_WIDTH = 132;
@@ -289,8 +289,8 @@ const styles = StyleSheet.create({
   fadeBottom: { bottom: 0 },
   selection: {
     position: 'absolute',
-    left: 4,
-    right: 4,
+    left: 0,
+    right: 0,
     borderRadius: 12,
     borderWidth: 1,
   },
