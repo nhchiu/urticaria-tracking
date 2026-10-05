@@ -174,7 +174,7 @@ export function DateWheelPicker({ value, onChange, minDate, maxDate, locale, rec
   const cardTone = theme.colors.elevation.level1;
 
   const Overlay = ({ itemHeight, pickerHeight, overlayItemStyle }: RenderOverlayProps) => (
-    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+    <View style={[StyleSheet.absoluteFill, { pointerEvents: 'none' }]}>
       <LinearGradient
         colors={[cardTone, 'transparent']}
         style={[styles.fade, styles.fadeTop, { height: Math.round(itemHeight * 1.2) }]}
