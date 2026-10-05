@@ -84,8 +84,8 @@ function ScoreCard({
                 style={[
                   styles.scoreBtn,
                   {
-                    borderWidth: active ? 2 : 0,
-                    borderColor: theme.colors.primary,
+                    borderWidth: 2,
+                    borderColor: active ? theme.colors.primary : 'transparent',
                   },
                 ]}
                 contentStyle={styles.scoreContent}
