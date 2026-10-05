@@ -33,9 +33,6 @@ interface DateWheelPickerProps {
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
 
-/** Blend the picker band into the elevated card's rendered surface tone. */
-const cardTone = (dark: boolean) => (dark ? 'rgb(37, 35, 42)' : 'rgb(247, 243, 249)');
-
 function tickHaptic() {
   if (Platform.OS === 'web') return;
   Haptics.selectionAsync().catch(() => {});
@@ -128,7 +125,7 @@ const WheelCell = ({ value, label, itemTextStyle, marked }: WheelCellProps) => {
           styles.cellText,
           {
             lineHeight: Math.round(height / 1.8),
-            color: marked ? theme.colors.onSurface : theme.colors.onSurfaceVariant,
+            color: theme.colors.onSurface,
           },
           itemTextStyle,
         ]}
@@ -172,14 +169,18 @@ export function DateWheelPicker({ value, onChange, minDate, maxDate, locale, rec
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Fade the wheel into the elevated card's own tone (MD3 elevation level 1),
+  // so the picker band blends with the card in both modes with no hardcoded colors.
+  const cardTone = theme.colors.elevation.level1;
+
   const Overlay = ({ itemHeight, pickerHeight, overlayItemStyle }: RenderOverlayProps) => (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       <LinearGradient
-        colors={[cardTone(theme.dark), 'transparent']}
+        colors={[cardTone, 'transparent']}
         style={[styles.fade, styles.fadeTop, { height: Math.round(itemHeight * 1.2) }]}
       />
       <LinearGradient
-        colors={['transparent', cardTone(theme.dark)]}
+        colors={['transparent', cardTone]}
         style={[styles.fade, styles.fadeBottom, { height: Math.round(itemHeight * 1.2) }]}
       />
       <View
@@ -263,7 +264,7 @@ export function DateWheelPicker({ value, onChange, minDate, maxDate, locale, rec
     >
       {({ dateNodes }) => (
         <View
-          style={[styles.columns, { backgroundColor: cardTone(theme.dark) }]}
+          style={[styles.columns, { backgroundColor: cardTone }]}
           ref={columnsRef}
         >
           {dateNodes.map(({ node }) => node)}
