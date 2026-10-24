@@ -27,8 +27,9 @@ interface DateWheelPickerProps {
   maxDate?: string;
   /** Date formatting locale (month names + column order). */
   locale: 'en' | 'zh-Hant';
-  /** Keys (YYYY-MM-DD) that already have a record; marked in the wheel. */
   recorded?: ReadonlySet<string>;
+  /** True when the picker's screen/tab is currently active. */
+  active?: boolean;
 }
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
@@ -183,6 +184,7 @@ export const DateWheelPicker = memo(function DateWheelPicker({
   maxDate,
   locale,
   recorded,
+  active = true,
 }: DateWheelPickerProps) {
   const theme = useTheme();
   const bound = toLocalMidnight(maxDate ?? dateKey(new Date()));
@@ -203,10 +205,26 @@ export const DateWheelPicker = memo(function DateWheelPicker({
   const yearPrefix = value.slice(0, 4);
   const monthPrefix = value.slice(0, 7);
 
-  useEffect(() => {
+  const syncWebWheels = useCallback(() => {
     if (Platform.OS !== 'web' || !columnsRef.current) return;
-    anchorWheelsOnWeb(columnsRef.current, value, minDate);
+    let tries = 0;
+    const attempt = () => {
+      if (!columnsRef.current) return;
+      const cols = webScrollables(columnsRef.current);
+      if (cols.length > 0) {
+        anchorWheelsOnWeb(columnsRef.current, value, minDate);
+      } else if (tries < 15 && typeof requestAnimationFrame === 'function') {
+        tries += 1;
+        requestAnimationFrame(attempt);
+      }
+    };
+    attempt();
   }, [value, minDate]);
+
+  useEffect(() => {
+    if (!active) return;
+    syncWebWheels();
+  }, [active, syncWebWheels, locale]);
 
   const handleWebScrollEnd = useCallback(() => {
     snapWheelsOnWeb(columnsRef.current);
@@ -284,6 +302,7 @@ export const DateWheelPicker = memo(function DateWheelPicker({
         <View
           style={[styles.columns, { backgroundColor: cardTone }]}
           ref={columnsRef}
+          onLayout={Platform.OS === 'web' ? syncWebWheels : undefined}
         >
           {dateNodes.map(({ node }) => node)}
         </View>

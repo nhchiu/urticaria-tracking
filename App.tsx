@@ -404,6 +404,7 @@ export default function App() {
             maxDate={todayKey}
             locale={lang}
             recorded={recordedKeys}
+            active={tabIndex === 0}
           />
           <View style={styles.wheelActions}>
             <Button
@@ -679,11 +680,6 @@ export default function App() {
   );
 
   const renderScene = ({ route }: { route: { key: string } }) => {
-    const activeKey = routes[tabIndex]?.key;
-    // Avoid building expensive off-screen trees while typing or interacting in the current tab
-    if (route.key !== activeKey) {
-      return <View style={styles.root} />;
-    }
     const body = (() => {
       switch (route.key) {
         case 'summary':
