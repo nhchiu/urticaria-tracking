@@ -1,6 +1,17 @@
+import * as Haptics from 'expo-haptics';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useMemo, useState } from 'react';
-import { Linking, PanResponder, ScrollView, StyleSheet, View, useColorScheme } from 'react-native';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  AppState,
+  Linking,
+  PanResponder,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+  useColorScheme,
+} from 'react-native';
 import {
   Appbar,
   BottomNavigation,
@@ -38,14 +49,27 @@ import {
   calcUAS7,
   dateKey,
   earliestEntryDate,
+  hasNote,
   makeEntry,
+  MAX_NOTE_LENGTH,
+  parseDateKey,
   type DailyEntry,
   type Score0to3,
 } from './src/uas';
 
 const MAX_UAS7 = 42;
 
-function ScoreCard({
+function triggerSelectionHaptic() {
+  if (Platform.OS === 'web') return;
+  Haptics.selectionAsync().catch(() => {});
+}
+
+function triggerSuccessHaptic() {
+  if (Platform.OS === 'web') return;
+  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+}
+
+const ScoreCard = memo(function ScoreCard({
   label,
   hint,
   options,
@@ -61,6 +85,11 @@ function ScoreCard({
   tones: Tone[];
 }) {
   const theme = useTheme();
+  const handleToggle = (n: Score0to3) => {
+    triggerSelectionHaptic();
+    onChange(value === n ? null : n);
+  };
+
   return (
     <Card style={styles.card} mode="elevated">
       <Card.Content>
@@ -69,7 +98,7 @@ function ScoreCard({
           {hint}
         </Text>
         <View style={styles.scoreRow}>
-          {[0, 1, 2, 3].map((n) => {
+          {([0, 1, 2, 3] as const).map((n) => {
             const active = value === n;
             const c = tones[n];
             return (
@@ -80,7 +109,7 @@ function ScoreCard({
                 buttonColor={c.bg}
                 textColor={c.fg}
                 accessibilityState={{ selected: active }}
-                onPress={() => onChange(value === n ? null : (n as Score0to3))}
+                onPress={() => handleToggle(n)}
                 style={[
                   styles.scoreBtn,
                   {
@@ -97,24 +126,51 @@ function ScoreCard({
           })}
         </View>
         <View style={styles.legend}>
-          {options.map((o) => (
-            <View key={o.value} style={styles.legendRow}>
-              <Text variant="bodyMedium" style={styles.legendTitle}>
-                {o.title}
-              </Text>
-              <Text variant="bodySmall" style={styles.legendDetail}>
-                {o.detail}
-              </Text>
-            </View>
-          ))}
+          {options.map((o) => {
+            const active = value === o.value;
+            return (
+              <Pressable
+                key={o.value}
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
+                onPress={() => handleToggle(o.value)}
+                style={[
+                  styles.legendRow,
+                  active && {
+                    backgroundColor: theme.colors.primaryContainer + '66',
+                    borderRadius: 6,
+                    paddingHorizontal: 6,
+                    marginHorizontal: -6,
+                  },
+                ]}
+              >
+                <Text
+                  variant="bodyMedium"
+                  style={[
+                    styles.legendTitle,
+                    active && { color: theme.colors.primary, fontWeight: '700' },
+                  ]}
+                >
+                  {o.title}
+                </Text>
+                <Text
+                  variant="bodySmall"
+                  style={[styles.legendDetail, active && { opacity: 0.95 }]}
+                >
+                  {o.detail}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
       </Card.Content>
     </Card>
   );
-}
+});
 
 export default function App() {
   const systemScheme = useColorScheme();
+  const [todayKey, setTodayKey] = useState<string>(() => dateKey(new Date()));
   const [byDate, setByDate] = useState<Record<string, DailyEntry>>({});
   const [selectedDate, setSelectedDate] = useState<string>(() => dateKey(new Date()));
   const [wheals, setWheals] = useState<Score0to3 | null>(null);
@@ -134,6 +190,27 @@ export default function App() {
   const [themeMenuVisible, setThemeMenuVisible] = useState(false);
   const [trendDays, setTrendDays] = useState(7);
   const [trendMenuVisible, setTrendMenuVisible] = useState(false);
+  const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
+  const [tabIndex, setTabIndex] = useState(0);
+
+  // Refresh todayKey when the app returns to foreground across midnight.
+  useEffect(() => {
+    const syncToday = () => {
+      const next = dateKey(new Date());
+      setTodayKey((prev) => (prev !== next ? next : prev));
+    };
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') syncToday();
+    });
+    if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+      window.addEventListener('focus', syncToday);
+      return () => {
+        sub.remove();
+        window.removeEventListener('focus', syncToday);
+      };
+    }
+    return () => sub.remove();
+  }, []);
 
   useEffect(() => {
     Promise.all([loadEntries(), loadSettings()]).then(([entries, settings]) => {
@@ -171,12 +248,14 @@ export default function App() {
     if (typeof document === 'undefined') return;
     document.title = t.pageTitle('');
   }, [t]);
+
   const langLabel =
     langPref === 'system' ? t.optSystem : langPref === 'en' ? t.optEnglish : t.optChinese;
   const themeLabel =
     themePref === 'system' ? t.optSystem : themePref === 'light' ? t.optLight : t.optDark;
   const isDark = themePref === 'dark' || (themePref === 'system' && systemScheme === 'dark');
   const paperTheme = isDark ? darkTheme : lightTheme;
+  const scoreTones = SCORE_TONES[isDark ? 'dark' : 'light'];
 
   const chartPalette: Palette = useMemo(
     () => ({
@@ -190,17 +269,27 @@ export default function App() {
     [paperTheme],
   );
 
-  const last7 = useMemo(() => buildLast7(byDate, new Date(), lang), [byDate, lang]);
+  const todayDate = useMemo(() => parseDateKey(todayKey), [todayKey]);
+  const last7 = useMemo(() => buildLast7(byDate, todayDate, lang), [byDate, todayDate, lang]);
   const uas7 = useMemo(() => calcUAS7(last7), [last7]);
-  const allWeeks = useMemo(() => calcAllWeeks(byDate, new Date(), lang), [byDate, lang]);
+  const allWeeks = useMemo(() => calcAllWeeks(byDate, todayDate, lang), [byDate, todayDate, lang]);
   const trendSeries = useMemo(
-    () => buildLastN(byDate, trendDays, new Date(), lang),
-    [byDate, trendDays, lang],
+    () => buildLastN(byDate, trendDays, todayDate, lang),
+    [byDate, trendDays, todayDate, lang],
   );
   const recordedKeys = useMemo(() => new Set(Object.keys(byDate)), [byDate]);
   const firstDate = useMemo(() => earliestEntryDate(byDate), [byDate]);
   const todayTotal = (wheals ?? 0) + (itch ?? 0);
   const sealed = wheals !== null && itch !== null;
+
+  const existingForSelected = byDate[selectedDate];
+  const trimmedNote = note.trim().slice(0, MAX_NOTE_LENGTH);
+  const isSavedAndUnchanged =
+    sealed &&
+    existingForSelected !== undefined &&
+    existingForSelected.wheals === wheals &&
+    existingForSelected.itch === itch &&
+    (existingForSelected.note ?? '') === trimmedNote;
 
   async function persist(next: Record<string, DailyEntry>) {
     setByDate(next);
@@ -249,6 +338,7 @@ export default function App() {
     if (wheals === null || itch === null) return;
     const entry = makeEntry(selectedDate, wheals, itch, note);
     const next = { ...byDate, [selectedDate]: entry };
+    triggerSuccessHaptic();
     await persist(next);
   }
 
@@ -261,12 +351,46 @@ export default function App() {
     setNote('');
   }
 
+  const handleSelectChartDate = useCallback((date: string) => {
+    setSelectedDate(date);
+    setTabIndex(0);
+  }, []);
+
   const band = uas7.band;
   const bandText = t.bands[band.key];
   const progress = Math.min(1, uas7.sum / MAX_UAS7);
 
-  // Tab scenes share state defined above.
-  const entrySection = (
+  const routes = useMemo(
+    () => [
+      { key: 'entry', title: t.tabs.entry, focusedIcon: 'pencil-plus' },
+      { key: 'summary', title: t.tabs.summary, focusedIcon: 'gauge' },
+      { key: 'trend', title: t.tabs.trend, focusedIcon: 'chart-line' },
+      { key: 'weeks', title: t.tabs.weeks, focusedIcon: 'calendar-week' },
+      { key: 'help', title: t.tabs.help, focusedIcon: 'help-circle' },
+    ],
+    [t],
+  );
+
+  // Horizontal swipe switches tabs. Direction-locked so vertical scrolling
+  // and the horizontal date strip keep their own gestures.
+  const swipeResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, g) =>
+          Math.abs(g.dx) > 24 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
+        onPanResponderRelease: (_, g) => {
+          if (Math.abs(g.dx) < 60) return;
+          if (Math.abs(g.dx) < Math.abs(g.dy) * 1.5) return;
+          setTabIndex((i) => {
+            if (g.dx < 0) return Math.min(routes.length - 1, i + 1);
+            return Math.max(0, i - 1);
+          });
+        },
+      }),
+    [routes.length],
+  );
+
+  const renderEntrySection = () => (
     <>
       <Text variant="titleMedium" style={styles.sectionTitle}>
         {t.sectionEntry}
@@ -277,7 +401,7 @@ export default function App() {
           <DateWheelPicker
             value={selectedDate}
             onChange={setSelectedDate}
-            maxDate={dateKey(new Date())}
+            maxDate={todayKey}
             locale={lang}
             recorded={recordedKeys}
           />
@@ -286,7 +410,8 @@ export default function App() {
               mode="outlined"
               compact
               icon="calendar-today"
-              onPress={() => setSelectedDate(dateKey(new Date()))}
+              disabled={selectedDate === todayKey}
+              onPress={() => setSelectedDate(todayKey)}
             >
               {t.today}
             </Button>
@@ -303,7 +428,7 @@ export default function App() {
         options={t.whealsOptions}
         value={wheals}
         onChange={setWheals}
-        tones={SCORE_TONES[isDark ? 'dark' : 'light']}
+        tones={scoreTones}
       />
       <ScoreCard
         label={t.itchLabel}
@@ -311,7 +436,7 @@ export default function App() {
         options={t.itchOptions}
         value={itch}
         onChange={setItch}
-        tones={SCORE_TONES[isDark ? 'dark' : 'light']}
+        tones={scoreTones}
       />
 
       <Card style={styles.card} mode="elevated">
@@ -324,7 +449,7 @@ export default function App() {
             value={note}
             onChangeText={setNote}
             placeholder={t.notePlaceholder}
-            maxLength={500}
+            maxLength={MAX_NOTE_LENGTH}
             style={styles.noteInput}
           />
         </Card.Content>
@@ -338,16 +463,22 @@ export default function App() {
           <Text variant="bodySmall" style={styles.hint}>
             {`${wheals ?? t.missing} + ${itch ?? t.missing}`} —{' '}
             {sealed
-              ? byDate[selectedDate]
+              ? existingForSelected
                 ? t.saveHintUpdate
                 : t.saveHintRecord
               : t.scoreRequired}
           </Text>
           <View style={styles.btnRow}>
-            <Button mode="contained" icon="content-save" onPress={handleSave} disabled={!sealed} style={styles.btn}>
-              {t.save}
+            <Button
+              mode="contained"
+              icon={isSavedAndUnchanged ? 'check' : 'content-save'}
+              onPress={handleSave}
+              disabled={!sealed || isSavedAndUnchanged}
+              style={styles.btn}
+            >
+              {isSavedAndUnchanged ? `✓ ${t.save}` : t.save}
             </Button>
-            {byDate[selectedDate] && (
+            {existingForSelected && (
               <Button
                 mode="outlined"
                 icon="delete"
@@ -367,7 +498,7 @@ export default function App() {
     </>
   );
 
-  const summarySection = (
+  const renderSummarySection = () => (
     <>
       <Text variant="titleMedium" style={styles.sectionTitle}>
         {t.sectionSummary}
@@ -377,7 +508,10 @@ export default function App() {
           <Text variant="displaySmall">
             {uas7.sum} <Text variant="titleMedium">/ 42</Text>
           </Text>
-          <Chip style={[styles.bandChip, { backgroundColor: band.color }]} textStyle={[styles.bandChipText, { color: BAND_TEXT[band.key] }]}>
+          <Chip
+            style={[styles.bandChip, { backgroundColor: band.color }]}
+            textStyle={[styles.bandChipText, { color: BAND_TEXT[band.key] }]}
+          >
             {bandText.title}
           </Chip>
           <Text variant="bodySmall" style={styles.hint}>
@@ -392,7 +526,7 @@ export default function App() {
     </>
   );
 
-  const trendSection = (
+  const renderTrendSection = () => (
     <>
       <Menu
         visible={trendMenuVisible}
@@ -435,10 +569,7 @@ export default function App() {
             days={trendSeries}
             palette={chartPalette}
             selectedDate={selectedDate}
-            onSelectDate={(date) => {
-              setSelectedDate(date);
-              setTabIndex(0);
-            }}
+            onSelectDate={handleSelectChartDate}
           />
           <Text variant="bodySmall" style={styles.hint}>
             {t.chartHint}
@@ -446,12 +577,17 @@ export default function App() {
           <Text variant="bodySmall" style={styles.hint}>
             {t.chartNoteHint}
           </Text>
+          {hasNote(existingForSelected) && (
+            <Text variant="bodySmall" style={styles.selectedNotePreview}>
+              ★ {selectedDate}: {existingForSelected.note}
+            </Text>
+          )}
         </Card.Content>
       </Card>
     </>
   );
 
-  const weeksSection = (
+  const renderWeeksSection = () => (
     <>
       <Text variant="titleMedium" style={styles.sectionTitle}>
         {t.sectionWeeks}
@@ -506,9 +642,7 @@ export default function App() {
     </>
   );
 
-  const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
-
-  const helpSection = (
+  const renderHelpSection = () => (
     <>
       <Text variant="titleMedium" style={styles.sectionTitle}>
         {t.sectionHelp}
@@ -528,7 +662,11 @@ export default function App() {
                 <Text
                   variant="bodyMedium"
                   style={[styles.faqLink, { color: paperTheme.colors.primary }]}
-                  onPress={() => item.url && Linking.openURL(item.url)}
+                  onPress={() => {
+                    if (item.url && /^https:\/\//i.test(item.url)) {
+                      Linking.openURL(item.url).catch(() => {});
+                    }
+                  }}
                 >
                   {t.openLink}: {item.url}
                 </Text>
@@ -540,55 +678,29 @@ export default function App() {
     </>
   );
 
-  const [tabIndex, setTabIndex] = useState(0);
-  const routes = useMemo(
-    () => [
-      { key: 'entry', title: t.tabs.entry, focusedIcon: 'pencil-plus' },
-      { key: 'summary', title: t.tabs.summary, focusedIcon: 'gauge' },
-      { key: 'trend', title: t.tabs.trend, focusedIcon: 'chart-line' },
-      { key: 'weeks', title: t.tabs.weeks, focusedIcon: 'calendar-week' },
-      { key: 'help', title: t.tabs.help, focusedIcon: 'help-circle' },
-    ],
-    [t],
-  );
-
-  // Horizontal swipe switches tabs. Direction-locked so vertical scrolling
-  // and the horizontal date strip keep their own gestures.
-  const swipeResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_, g) =>
-          Math.abs(g.dx) > 24 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
-        onPanResponderRelease: (_, g) => {
-          if (Math.abs(g.dx) < 60) return;
-          if (Math.abs(g.dx) < Math.abs(g.dy) * 1.5) return;
-          setTabIndex((i) => {
-            if (g.dx < 0) return Math.min(routes.length - 1, i + 1);
-            return Math.max(0, i - 1);
-          });
-        },
-      }),
-    [routes.length],
-  );
-
   const renderScene = ({ route }: { route: { key: string } }) => {
+    const activeKey = routes[tabIndex]?.key;
+    // Avoid building expensive off-screen trees while typing or interacting in the current tab
+    if (route.key !== activeKey) {
+      return <View style={styles.root} />;
+    }
     const body = (() => {
       switch (route.key) {
         case 'summary':
-          return summarySection;
+          return renderSummarySection();
         case 'trend':
-          return trendSection;
+          return renderTrendSection();
         case 'weeks':
-          return weeksSection;
+          return renderWeeksSection();
         case 'help':
-          return helpSection;
+          return renderHelpSection();
         case 'entry':
         default:
-          return entrySection;
+          return renderEntrySection();
       }
     })();
     return (
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.inner}>{body}</View>
       </ScrollView>
     );
@@ -785,6 +897,7 @@ const styles = StyleSheet.create({
   trendAnchorLabel: { fontSize: 19, fontWeight: '500', lineHeight: 24 },
   card: { marginBottom: 14 },
   hint: { marginTop: 4, opacity: 0.7, fontSize: 14, lineHeight: 20 },
+  selectedNotePreview: { marginTop: 8, fontSize: 14, lineHeight: 20 },
   dropdown: { marginTop: 8, alignSelf: 'stretch' },
   dropdownContent: { justifyContent: 'space-between' },
   scoreRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
@@ -792,7 +905,14 @@ const styles = StyleSheet.create({
   scoreContent: { height: 52, paddingHorizontal: 4 },
   scoreLabel: { fontSize: 20, fontWeight: '700', marginHorizontal: 0 },
   legend: { marginTop: 12 },
-  legendRow: { marginTop: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 },
+  legendRow: {
+    marginTop: 6,
+    paddingVertical: 2,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+    gap: 12,
+  },
   legendTitle: { fontWeight: '600', flexShrink: 0, fontSize: 15 },
   legendDetail: { fontSize: 15, flex: 1, textAlign: 'right', opacity: 0.7 },
   wheelActions: { flexDirection: 'row', justifyContent: 'center', marginTop: 10 },

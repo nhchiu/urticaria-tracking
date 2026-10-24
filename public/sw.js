@@ -3,13 +3,13 @@
  * App-shell + runtime caching for the `expo export --platform web` output:
  * - On install, precache the app shell (page, manifest, icons).
  * - Navigations: network-first, fall back to the cached app shell offline.
- * - Same-origin static assets (JS bundles, fonts, images): cache-first with
- *   runtime caching, so the app keeps working offline after the first visit.
+ * - Same-origin static assets (JS bundles, fonts, images): stale-while-revalidate
+ *   so the app loads instantly offline while refreshing updated assets in the background.
  *
  * Bump CACHE_VERSION to force clients onto a fresh cache on the next deploy.
  */
 
-const CACHE_VERSION = 'uas7-v1';
+const CACHE_VERSION = 'uas7-v2';
 const APP_SHELL = [
   './',
   './index.html',
@@ -60,21 +60,22 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_VERSION).then((cache) => cache.put('./index.html', copy));
+          if (response && response.status === 200) {
+            const copy = response.clone();
+            caches.open(CACHE_VERSION).then((cache) => cache.put('./index.html', copy));
+          }
           return response;
         })
-        .catch(() => caches.match('./index.html').then((cached) => cached || fetch(request)))
+        .catch(() => caches.match('./index.html').then((cached) => cached || Response.error()))
     );
     return;
   }
 
-  // Static assets: cache-first, populate the cache on network success.
+  // Static assets: stale-while-revalidate (serve cached fast, refresh in background).
   event.respondWith(
-    caches.match(request).then(
-      (cached) =>
-        cached ||
-        fetch(request).then((response) => {
+    caches.match(request).then((cached) => {
+      const networkFetch = fetch(request)
+        .then((response) => {
           // Only cache successful, basic (same-origin, no-cors-safe) responses.
           if (response && response.status === 200 && response.type === 'basic') {
             const copy = response.clone();
@@ -82,6 +83,9 @@ self.addEventListener('fetch', (event) => {
           }
           return response;
         })
-    )
+        .catch(() => cached || Response.error());
+
+      return cached || networkFetch;
+    })
   );
 });

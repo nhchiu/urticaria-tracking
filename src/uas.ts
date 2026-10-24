@@ -96,9 +96,18 @@ export function isValidScore(n: unknown): n is Score0to3 {
   return n === 0 || n === 1 || n === 2 || n === 3;
 }
 
+const DATE_KEY_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+/** True when `key` is a valid calendar YYYY-MM-DD date string. */
+export function isValidDateKey(key: unknown): key is string {
+  if (typeof key !== 'string' || !DATE_KEY_RE.test(key)) return false;
+  const d = parseDateKey(key);
+  return !Number.isNaN(d.getTime()) && dateKey(d) === key;
+}
+
 /** Local YYYY-MM-DD key (avoids UTC-shift bugs from toISOString). */
 export function dateKey(d: Date): string {
-  const y = d.getFullYear();
+  const y = String(d.getFullYear()).padStart(4, '0');
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
@@ -106,7 +115,9 @@ export function dateKey(d: Date): string {
 
 export function parseDateKey(key: string): Date {
   const [y, m, d] = key.split('-').map(Number);
-  return new Date(y, (m ?? 1) - 1, d ?? 1);
+  const dt = new Date(y, (m ?? 1) - 1, d ?? 1);
+  dt.setFullYear(y);
+  return dt;
 }
 
 /** n keys ending today (or ending at `ref`), oldest first. */
@@ -192,7 +203,8 @@ export function calcUAS7(days: DayScore[]): UAS7Result {
   };
 }
 
-export function severityFor(uas7: number): SeverityBand {  if (uas7 <= 0) {
+export function severityFor(uas7: number): SeverityBand {
+  if (uas7 <= 0) {
     return {
       key: 'free',
       title: 'Urticaria-free',

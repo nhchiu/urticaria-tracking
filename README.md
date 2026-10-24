@@ -2,20 +2,20 @@
 
 [English](./README.md) | [繁體中文](./README.zh-Hant.md)
 
-UAS7 urticaria diary for Android and iOS, built with Expo React Native. Record daily wheals + itch scores, compute the weekly UAS7, and visualize the 7-day trend.
+UAS7 urticaria diary for Android, iOS, and Web (PWA), built with Expo React Native. Record daily wheals + itch scores, compute the weekly UAS7, and visualize 7-day and 28-day trends.
 
 ## Features
 
-- Daily entry: wheals (0–3) + itch (0–3) → daily UAS 0–6
+- Daily entry: wheals (0–3) + itch (0–3) → daily UAS 0–6, plus optional daily notes (triggers, meds, sleep…)
+- iOS-style date wheel picker with recorded-day dot indicators and quick "Today" jump
 - UAS7 summary: sum over last 7 days → 0–42, with standard severity band + progress bar
-- 7-day trend chart (react-native-svg, gap-aware: missing days break the line)
-- History list for the last 7 days, tap to edit
-- 14-day date picker (today + previous 13 days)
+- 7-day and 28-day trend charts (react-native-svg, gap-aware: missing days break the line; `★` marks days with notes; tap any day to edit)
+- Complete weekly history from the earliest recorded entry to the current week
+- Built-in bilingual Help & FAQ tab
 - Bilingual UI: English / 繁體中文 (follows system locale, overridable)
 - Optional nickname: asked once on first launch, editable in Settings, shown in the app header
 - Light / dark / system theme (Material 3 via react-native-paper)
 - Local persistence with AsyncStorage (no backend, works offline)
-- Responsive layout: single column on phones, two columns ≥960px (web/tablet)
 
 ## UAS7 scoring reference
 
@@ -38,27 +38,29 @@ UAS7 bands:
 | 16–27 | Moderate |
 | 28–42 | Severe |
 
-Incomplete weeks are summed as-is and flagged provisional until all 7 days are recorded.
+Incomplete weeks are summed as-is and show how many of the 7 days have been recorded.
 
 ## Tech stack
 
 - Expo ~57, React 19, React Native 0.86
-- react-native-paper (MD3 UI), react-native-svg (chart)
-- @react-native-async-storage/async-storage, expo-localization, expo-status-bar
-- TypeScript (strict-ish), pure testable domain logic in `src/uas.ts`
+- react-native-paper (MD3 UI), react-native-svg (chart), @quidone/react-native-wheel-picker
+- @react-native-async-storage/async-storage, expo-localization, expo-haptics, expo-status-bar
+- TypeScript (strict), pure testable domain logic in `src/uas.ts`
 
 ## Project structure
 
 ```
-App.tsx               # UI: entry form, UAS7 summary, trend, history, settings
-src/uas.ts            # UAS7 domain logic (daily total, last-7, bands, labels)
-src/uas.run-tests.ts  # Logic self-checks (no test framework)
-src/i18n.ts           # en / zh-Hant strings, language + theme prefs
-src/storage.ts        # AsyncStorage load/save for entries + settings
-src/TrendChart.tsx    # 7-day SVG line chart
-src/theme.ts          # Chart palettes
-app.json / eas.json   # Expo + EAS config
-assets/               # Icons, splash, favicon
+App.tsx                 # UI: tabbed scenes (Entry, Summary, Trend, Weekly, Help) + Settings
+src/uas.ts              # UAS7 domain logic (daily total, last-N, bands, weekly blocks)
+src/uas.run-tests.ts    # Logic self-checks (no test framework required)
+src/DateWheelPicker.tsx # iOS-style wheel date picker with recorded-day indicators
+src/TrendChart.tsx      # 7-day / 28-day SVG line chart
+src/storage.ts          # AsyncStorage load/save/validation for entries + settings
+src/theme.ts            # MD3 themes, score severity tones, chart palettes
+src/i18n/               # Modular en / zh-Hant strings, types, language + theme prefs
+app.json / eas.json     # Expo + EAS config
+assets/                 # Icons, splash, favicon
+public/                 # PWA manifest, offline service worker, web icons
 ```
 
 Storage keys: `@uas7_entries_v1`, `@uas7_settings_v1`.

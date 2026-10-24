@@ -5,7 +5,7 @@ import {
 } from '@quidone/react-native-wheel-picker';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useEffect, useMemo, useRef } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Platform, StyleSheet, Text, View, type StyleProp, type TextStyle } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { dateKey } from './uas';
@@ -50,13 +50,12 @@ type WebScrollable = {
 // react-native-web's ScrollView ignores the `contentOffset` and `snapToOffsets`
 // props, so the picker columns mount with scrollTop: 0 while their rows are laid
 // out relative to the selection index -- the wheel looks empty until touched.
-// These helpers re-anchor scrollTop on mount and snap to the nearest row after a
-// scroll settles. They are web-only and inert on native.
+// These helpers re-anchor scrollTop on mount / external value change and snap to
+// the nearest row after a scroll settles. They are web-only and inert on native.
 const webScrollables = (root: unknown): WebScrollable[] => {
-  const node = root as { querySelectorAll?: (s: string) => unknown };
-  const divs = node.querySelectorAll
-    ? Array.from(node.querySelectorAll('div') as ArrayLike<unknown>)
-    : [];
+  const node = root as { querySelectorAll?: (s: string) => unknown } | null;
+  if (!node?.querySelectorAll) return [];
+  const divs = Array.from(node.querySelectorAll('div') as ArrayLike<unknown>);
   return (divs as WebScrollable[]).filter((el) => el.scrollHeight > el.clientHeight);
 };
 
@@ -90,7 +89,12 @@ const anchorWheelsOnWeb = (
   };
   columns.forEach((el) => {
     const index = indexOf[wheelUnit(el)];
-    if (index >= 0) el.scrollTop = index * ITEM_HEIGHT;
+    if (index >= 0) {
+      const target = index * ITEM_HEIGHT;
+      if (Math.abs(el.scrollTop - target) > 1) {
+        el.scrollTop = target;
+      }
+    }
   });
 };
 
@@ -114,7 +118,7 @@ type WheelCellProps = {
   marked: boolean;
 };
 
-const WheelCell = ({ value, label, itemTextStyle, marked }: WheelCellProps) => {
+const WheelCell = memo(function WheelCell({ value, label, itemTextStyle, marked }: WheelCellProps) {
   const height = usePickerItemHeight();
   const theme = useTheme();
   return (
@@ -140,40 +144,12 @@ const WheelCell = ({ value, label, itemTextStyle, marked }: WheelCellProps) => {
       />
     </View>
   );
-};
+});
 
-/** iOS-style wheel wrapper: drag to spin, tap rows to jump, spring snap. */
-export function DateWheelPicker({ value, onChange, minDate, maxDate, locale, recorded }: DateWheelPickerProps) {
+const WheelOverlay = ({ itemHeight, pickerHeight, overlayItemStyle }: RenderOverlayProps) => {
   const theme = useTheme();
-  const bound = toLocalMidnight(maxDate ?? dateKey(new Date()));
-  const columnsRef = useRef<View>(null);
-
-  const recordedYears = useMemo(() => {
-    const set = new Set<string>();
-    if (recorded) for (const key of recorded) set.add(key.slice(0, 4));
-    return set;
-  }, [recorded]);
-
-  const recordedMonths = useMemo(() => {
-    const set = new Set<string>();
-    if (recorded) for (const key of recorded) set.add(key.slice(0, 7));
-    return set;
-  }, [recorded]);
-
-  const yearPrefix = value.slice(0, 4);
-  const monthPrefix = value.slice(0, 7);
-
-  useEffect(() => {
-    if (Platform.OS !== 'web' || !columnsRef.current) return;
-    anchorWheelsOnWeb(columnsRef.current, value, minDate);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Fade the wheel into the elevated card's own tone (MD3 elevation level 1),
-  // so the picker band blends with the card in both modes with no hardcoded colors.
   const cardTone = theme.colors.elevation.level1;
-
-  const Overlay = ({ itemHeight, pickerHeight, overlayItemStyle }: RenderOverlayProps) => (
+  return (
     <View style={[StyleSheet.absoluteFill, { pointerEvents: 'none' }]}>
       <LinearGradient
         colors={[cardTone, 'transparent']}
@@ -197,6 +173,48 @@ export function DateWheelPicker({ value, onChange, minDate, maxDate, locale, rec
       />
     </View>
   );
+};
+
+/** iOS-style wheel wrapper: drag to spin, tap rows to jump, spring snap. */
+export const DateWheelPicker = memo(function DateWheelPicker({
+  value,
+  onChange,
+  minDate,
+  maxDate,
+  locale,
+  recorded,
+}: DateWheelPickerProps) {
+  const theme = useTheme();
+  const bound = toLocalMidnight(maxDate ?? dateKey(new Date()));
+  const columnsRef = useRef<View>(null);
+
+  const recordedYears = useMemo(() => {
+    const set = new Set<string>();
+    if (recorded) for (const key of recorded) set.add(key.slice(0, 4));
+    return set;
+  }, [recorded]);
+
+  const recordedMonths = useMemo(() => {
+    const set = new Set<string>();
+    if (recorded) for (const key of recorded) set.add(key.slice(0, 7));
+    return set;
+  }, [recorded]);
+
+  const yearPrefix = value.slice(0, 4);
+  const monthPrefix = value.slice(0, 7);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !columnsRef.current) return;
+    anchorWheelsOnWeb(columnsRef.current, value, minDate);
+  }, [value, minDate]);
+
+  const handleWebScrollEnd = useCallback(() => {
+    snapWheelsOnWeb(columnsRef.current);
+  }, []);
+
+  // Fade the wheel into the elevated card's own tone (MD3 elevation level 1),
+  // so the picker band blends with the card in both modes with no hardcoded colors.
+  const cardTone = theme.colors.elevation.level1;
 
   return (
     <DatePicker
@@ -217,8 +235,8 @@ export function DateWheelPicker({ value, onChange, minDate, maxDate, locale, rec
           width={DATE_WIDTH}
           enableScrollByTapOnItem
           onValueChanging={tickHaptic}
-          _onScrollEnd={Platform.OS === 'web' ? () => snapWheelsOnWeb(columnsRef.current) : undefined}
-          renderOverlay={Overlay}
+          _onScrollEnd={Platform.OS === 'web' ? handleWebScrollEnd : undefined}
+          renderOverlay={WheelOverlay}
           renderItem={({ item, itemTextStyle }) => (
             <WheelCell
               value={item.value}
@@ -233,8 +251,8 @@ export function DateWheelPicker({ value, onChange, minDate, maxDate, locale, rec
           width={MONTH_WIDTH}
           enableScrollByTapOnItem
           onValueChanging={tickHaptic}
-          _onScrollEnd={Platform.OS === 'web' ? () => snapWheelsOnWeb(columnsRef.current) : undefined}
-          renderOverlay={Overlay}
+          _onScrollEnd={Platform.OS === 'web' ? handleWebScrollEnd : undefined}
+          renderOverlay={WheelOverlay}
           renderItem={({ item, itemTextStyle }) => (
             <WheelCell
               value={item.value}
@@ -250,8 +268,8 @@ export function DateWheelPicker({ value, onChange, minDate, maxDate, locale, rec
           width={YEAR_WIDTH}
           enableScrollByTapOnItem
           onValueChanging={tickHaptic}
-          _onScrollEnd={Platform.OS === 'web' ? () => snapWheelsOnWeb(columnsRef.current) : undefined}
-          renderOverlay={Overlay}
+          _onScrollEnd={Platform.OS === 'web' ? handleWebScrollEnd : undefined}
+          renderOverlay={WheelOverlay}
           renderItem={({ item, itemTextStyle }) => (
             <WheelCell
               value={item.value}
@@ -272,7 +290,7 @@ export function DateWheelPicker({ value, onChange, minDate, maxDate, locale, rec
       )}
     </DatePicker>
   );
-}
+});
 
 const styles = StyleSheet.create({
   columns: {

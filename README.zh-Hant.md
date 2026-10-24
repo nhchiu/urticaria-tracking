@@ -1,21 +1,21 @@
 # 蕁麻疹日記
 
-以 Expo React Native 打造的 UAS7 蕁麻疹日記，支援 Android 與 iOS。每天記錄風疹塊＋搔癢分數，自動計算每週 UAS7，並以圖表呈現 7 天趨勢。
+以 Expo React Native 打造的 UAS7 蕁麻疹日記，支援 Android、iOS 與網頁版（PWA）。每天記錄風疹塊＋搔癢分數，自動計算每週 UAS7，並以圖表呈現 7 天與 28 天趨勢。
 
 [English](./README.md) | [繁體中文](./README.zh-Hant.md)
 
 ## 功能
 
-- 每日紀錄：風疹塊（0–3）＋搔癢（0–3）→ 每日 UAS 0–6
+- 每日紀錄：風疹塊（0–3）＋搔癢（0–3）→ 每日 UAS 0–6，並支援每日選填備註（誘因、用藥、睡眠……）
+- iOS 風格滾輪日期選擇器，附已紀錄日期圓點標記與「今天」快速跳轉
 - UAS7 總結：加總過去 7 天 → 0–42，含標準嚴重度分級＋進度條
-- 7 天趨勢圖（react-native-svg，可感知缺漏：缺漏日期折線會斷開）
-- 過去 7 天歷史清單，點選即可編輯
-- 14 天日期選擇器（今天＋過去 13 天）
+- 7 天與 28 天趨勢圖（react-native-svg，可感知缺漏：缺漏日期折線會斷開；`★` 標示有備註之日期；點選任一日即可跳轉編輯）
+- 每週歷史紀錄：自首次紀錄起完整列出歷週 UAS7 統計
+- 內建雙語使用說明（FAQ）分頁
 - 雙語介面：English／繁體中文（跟隨系統語系，可手動覆寫）
 - 選填暱稱：首次開啟時詢問一次，可在設定中修改，會顯示於 App 標題列
 - 淺色／深色／跟隨系統主題（Material 3，react-native-paper）
 - 本機儲存（AsyncStorage，無後端，可離線使用）
-- 響應式版面：手機單欄，≥960px（網頁／平板）雙欄
 
 ## UAS7 計分參考
 
@@ -38,27 +38,29 @@ UAS7 分級：
 | 16–27 | 中度 |
 | 28–42 | 重度 |
 
-集滿 7 天前，總分按已紀錄天數加總，並標示為僅供參考。
+集滿 7 天前，總分按已紀錄天數加總，並顯示已紀錄天數。
 
 ## 技術架構
 
 - Expo ~57、React 19、React Native 0.86
-- react-native-paper（MD3 UI）、react-native-svg（圖表）
-- @react-native-async-storage/async-storage、expo-localization、expo-status-bar
-- TypeScript，核心計分邏輯為純函式、可測試（`src/uas.ts`）
+- react-native-paper（MD3 UI）、react-native-svg（圖表）、@quidone/react-native-wheel-picker
+- @react-native-async-storage/async-storage、expo-localization、expo-haptics、expo-status-bar
+- TypeScript（strict），核心計分邏輯為純函式、可測試（`src/uas.ts`）
 
 ## 專案結構
 
 ```
-App.tsx               # UI：紀錄表單、UAS7 總結、趨勢圖、歷史紀錄、設定
-src/uas.ts            # UAS7 領域邏輯（每日總分、過去 7 天、分級、標籤）
-src/uas.run-tests.ts  # 邏輯自我檢查（無測試框架）
-src/i18n.ts           # en / zh-Hant 字串、語言＋主題偏好
-src/storage.ts        # AsyncStorage 讀寫（紀錄＋設定）
-src/TrendChart.tsx    # 7 天 SVG 折線圖
-src/theme.ts          # 圖表配色
-app.json / eas.json   # Expo + EAS 設定
-assets/               # 圖示、啟動畫面、favicon
+App.tsx                 # UI：分頁畫面（紀錄、總結、趨勢、每週、說明）＋設定
+src/uas.ts              # UAS7 領域邏輯（每日總分、過去 N 天、分級、每週統計）
+src/uas.run-tests.ts    # 邏輯自我檢查（無需測試框架）
+src/DateWheelPicker.tsx # iOS 風格滾輪日期選擇器（含已紀錄標記）
+src/TrendChart.tsx      # 7 天／28 天 SVG 折線圖
+src/storage.ts          # AsyncStorage 讀寫與資料驗證（紀錄＋設定）
+src/theme.ts            # MD3 主題、分數色階、圖表配色
+src/i18n/               # 模組化 en / zh-Hant 字串、型別、語言＋主題偏好
+app.json / eas.json     # Expo + EAS 設定
+assets/                 # 圖示、啟動畫面、favicon
+public/                 # PWA manifest、離線 service worker、網頁圖示
 ```
 
 儲存鍵：`@uas7_entries_v1`、`@uas7_settings_v1`。

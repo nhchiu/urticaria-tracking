@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MAX_NICKNAME_LENGTH, SETTINGS_KEY, type Settings } from './i18n';
-import type { DailyEntry } from './uas';
+import { isValidDateKey, isValidScore, makeEntry, type DailyEntry } from './uas';
 
 const KEY = '@uas7_entries_v1';
 
@@ -8,24 +8,20 @@ export async function loadEntries(): Promise<Record<string, DailyEntry>> {
   try {
     const raw = await AsyncStorage.getItem(KEY);
     if (!raw) return {};
-    const parsed = JSON.parse(raw) as Record<string, DailyEntry>;
-    // Basic hygiene: drop malformed rows.
+    const parsed: unknown = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+    // Basic hygiene: drop malformed rows and strip unexpected fields.
     const clean: Record<string, DailyEntry> = {};
-    for (const [k, v] of Object.entries(parsed)) {
-      if (
-        v &&
-        typeof v.date === 'string' &&
-        [0, 1, 2, 3].includes(v.wheals) &&
-        [0, 1, 2, 3].includes(v.itch)
-      ) {
-        const row: DailyEntry = { ...v, date: k, total: v.wheals + v.itch };
-        // Keep notes as trimmed strings; drop empty / non-string values.
-        if (typeof v.note === 'string') {
-          const trimmed = v.note.trim().slice(0, 500);
-          if (trimmed) row.note = trimmed;
-          else delete row.note;
-        }
-        clean[k] = row;
+    for (const [k, v] of Object.entries(parsed as Record<string, unknown>)) {
+      if (!isValidDateKey(k) || !v || typeof v !== 'object' || Array.isArray(v)) continue;
+      const rec = v as Record<string, unknown>;
+      if (isValidScore(rec.wheals) && isValidScore(rec.itch)) {
+        clean[k] = makeEntry(
+          k,
+          rec.wheals,
+          rec.itch,
+          typeof rec.note === 'string' ? rec.note : undefined,
+        );
       }
     }
     return clean;
@@ -35,11 +31,19 @@ export async function loadEntries(): Promise<Record<string, DailyEntry>> {
 }
 
 export async function saveEntries(byDate: Record<string, DailyEntry>): Promise<void> {
-  await AsyncStorage.setItem(KEY, JSON.stringify(byDate));
+  try {
+    await AsyncStorage.setItem(KEY, JSON.stringify(byDate));
+  } catch {
+    // Ignore storage write errors (e.g. private browsing / quota exceeded)
+  }
 }
 
 export async function clearEntries(): Promise<void> {
-  await AsyncStorage.removeItem(KEY);
+  try {
+    await AsyncStorage.removeItem(KEY);
+  } catch {
+    // Ignore storage errors
+  }
 }
 
 const DEFAULT_SETTINGS: Settings = { lang: 'system', theme: 'system', nickname: '', nicknameAsked: false };
@@ -52,12 +56,14 @@ export async function loadSettings(): Promise<Settings> {
   try {
     const raw = await AsyncStorage.getItem(SETTINGS_KEY);
     if (!raw) return DEFAULT_SETTINGS;
-    const parsed = JSON.parse(raw) as Partial<Settings>;
+    const parsed: unknown = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return DEFAULT_SETTINGS;
+    const rec = parsed as Partial<Settings>;
     return {
-      lang: parsed.lang === 'en' || parsed.lang === 'zh-Hant' ? parsed.lang : 'system',
-      theme: parsed.theme === 'light' || parsed.theme === 'dark' ? parsed.theme : 'system',
-      nickname: cleanNickname(parsed.nickname),
-      nicknameAsked: parsed.nicknameAsked === true,
+      lang: rec.lang === 'en' || rec.lang === 'zh-Hant' ? rec.lang : 'system',
+      theme: rec.theme === 'light' || rec.theme === 'dark' ? rec.theme : 'system',
+      nickname: cleanNickname(rec.nickname),
+      nicknameAsked: rec.nicknameAsked === true,
     };
   } catch {
     return DEFAULT_SETTINGS;
@@ -65,5 +71,9 @@ export async function loadSettings(): Promise<Settings> {
 }
 
 export async function saveSettings(s: Settings): Promise<void> {
-  await AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+  try {
+    await AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+  } catch {
+    // Ignore storage write errors (e.g. private browsing / quota exceeded)
+  }
 }

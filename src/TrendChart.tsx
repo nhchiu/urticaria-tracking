@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { View } from 'react-native';
 import Svg, { Circle, G, Line, Text as SvgText, TSpan } from 'react-native-svg';
 import type { Palette } from './theme';
@@ -6,10 +6,10 @@ import { hasNote, shortDateLabel, type DayScore } from './uas';
 
 const MAX = 6;
 const VB_W = 360;
-const VB_H = 190;
+const VB_H = 210;
 const PAD_L = 26;
 const PAD_R = 14;
-const PAD_T = 16;
+const PAD_T = 36;
 const PAD_B = 38;
 
 function y(v: number, h: number): number {
@@ -21,7 +21,7 @@ function y(v: number, h: number): number {
  * gaps stay broken and missing days render as hollow dashed markers.
  * Dense ranges (e.g. 28 days) hide value labels and thin out x-axis labels.
  */
-export function TrendChart({
+export const TrendChart = memo(function TrendChart({
   days,
   palette,
   selectedDate,
@@ -43,7 +43,7 @@ export function TrendChart({
 
   return (
     <View onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
-      <Svg width={w} height={h} accessibilityLabel="7-day UAS trend line chart">
+      <Svg width={w} height={h} accessibilityLabel={`${n}-day UAS trend line chart`}>
         {/* gridlines + y labels */}
         {[0, 1, 2, 3, 4, 5, 6].map((v) => (
           <G key={v}>
@@ -64,15 +64,15 @@ export function TrendChart({
         {/* line segments between consecutive recorded days */}
         {days.map((d, i) => {
           if (i === days.length - 1) return null;
-          const n = days[i + 1];
-          if (d.total === null || n.total === null) return null;
+          const next = days[i + 1];
+          if (d.total === null || next.total === null) return null;
           return (
             <Line
               key={`seg-${d.date}`}
               x1={sx(i)}
               y1={sy(d.total)}
               x2={sx(i + 1)}
-              y2={sy(n.total)}
+              y2={sy(next.total)}
               stroke={palette.barFill}
               strokeWidth={2.5}
               strokeLinecap="round"
@@ -109,20 +109,22 @@ export function TrendChart({
                     stroke={palette.card}
                     strokeWidth={1.5}
                   />
-                  <SvgText
-                    x={sx(i)}
-                    y={sy(d.total) - 10}
-                    fontSize={12}
-                    fontWeight="700"
-                    textAnchor="middle"
-                    fill={palette.text}
-                  >
-                    {!dense && d.total}
-                  </SvgText>
+                  {!dense && (
+                    <SvgText
+                      x={sx(i)}
+                      y={sy(d.total) - 10}
+                      fontSize={12}
+                      fontWeight="700"
+                      textAnchor="middle"
+                      fill={palette.text}
+                    >
+                      {d.total}
+                    </SvgText>
+                  )}
                   {hasNote(d.entry) && (
                     <SvgText
                       x={sx(i)}
-                      y={sy(d.total) - 25}
+                      y={sy(d.total) - (dense ? 10 : 24)}
                       fontSize={13}
                       textAnchor="middle"
                       fill="#eab308"
@@ -197,4 +199,4 @@ export function TrendChart({
       </Svg>
     </View>
   );
-}
+});

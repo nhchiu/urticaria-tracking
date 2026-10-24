@@ -8,6 +8,8 @@ import {
   dateKey,
   earliestEntryDate,
   hasNote,
+  isValidDateKey,
+  isValidScore,
   last7Keys,
   lastNKeys,
   makeEntry,
@@ -29,6 +31,15 @@ function main(): void {
   assert(dailyTotal(0, 0) === 0, 'daily total 0+0=0');
   assert(dailyTotal(3, 3) === 6, 'daily total 3+3=6');
   assert(dailyTotal(2, 1) === 3, 'daily total 2+1=3');
+
+  assert(isValidScore(0) && isValidScore(3), 'isValidScore accepts 0..3');
+  assert(!isValidScore(-1) && !isValidScore(4) && !isValidScore('2'), 'isValidScore rejects out-of-range/non-number');
+
+  assert(isValidDateKey('2026-09-05'), 'isValidDateKey accepts valid date');
+  assert(isValidDateKey('2024-02-29'), 'isValidDateKey accepts leap day');
+  assert(!isValidDateKey('2026-02-29'), 'isValidDateKey rejects non-leap Feb 29');
+  assert(!isValidDateKey('2026-13-01') && !isValidDateKey('2026-00-10'), 'isValidDateKey rejects invalid month');
+  assert(!isValidDateKey('not-a-date') && !isValidDateKey(null), 'isValidDateKey rejects malformed input');
 
   const e = makeEntry('2026-09-05', 2, 3);
   assert(e.total === 5, 'makeEntry caches total');
